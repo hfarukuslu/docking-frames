@@ -1,7 +1,46 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <groupId>org.dockingframes</groupId>
-  <artifactId>docking-frames-parent</artifactId>
-  <packaging>pom</packaging>
-  <version>1.0.8-SNAPSHOT</version>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>org.sonatype.oss</groupId>
+		<artifactId>oss-parent</artifactId>
+		<version>5</version>
+	</parent>
+
+	<groupId>org.dockingframes</groupId>
+	<artifactId>docking-frames-parent</artifactId>
+	<packaging>pom</packaging>
+	<name>docking-frames</name>
+	<version>1.0.8-SNAPSHOT</version>
+
+	<organization>
+		<name>Docking Frames</name>
+		<url>www.docking-frames.org</url>
+	</organization>
+
+	<description>docking-frames is an open source Java Swing docking framework, licenced under LGPL 2.1</description>
+
+	<url>http://code.google.com/p/docking-frames/</url>
+
+	<scm>
+		<connection>scm:svn:http://docking-frames.googlecode.com/svn/trunk/</connection>
+		<developerConnection>scm:svn:https://docking-frames.googlecode.com/svn/trunk/</developerConnection>
+		<url>http://code.google.com/p/docking-frames/source/browse/</url>
+	</scm>
+
+	<licenses>
+		<license>
+			<name>GNU Lesser General Public License, version 2.1</name>
+			<url>http://www.gnu.org/licenses/lgpl-2.1.html</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+
+	<modules>
+		<module>../docking-frames-common</module>
+		<module>../docking-frames-framework</module>
+	</modules>
+
 </project>
