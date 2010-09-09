@@ -10,7 +10,7 @@
 	</parent>
 
 	<groupId>org.dockingframes</groupId>
-	<artifactId>docking-frames-core-common</artifactId>
+	<artifactId>docking-frames-common</artifactId>
 	<packaging>jar</packaging>
 
 </project>
