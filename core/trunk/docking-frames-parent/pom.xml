@@ -146,4 +146,80 @@
 		</developer>
 	</developers>
 
+	<properties>
+		<connectionDF>scm:svn:http://svn.javaforge.com/svn/DockingFrames/</connectionDF>
+		<checkoutDF>${project.build.directory}/checkout</checkoutDF>
+		<moduleDF>common</moduleDF>
+		<targetDF>target/test</targetDF>
+	</properties>
+
+	<profiles>
+
+		<profile>
+
+			<!-- get updated docking-frames sources form java forge -->
+
+			<id>checkout</id>
+
+			<build>
+
+				<plugins>
+
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-scm-plugin</artifactId>
+						<version>1.2</version>
+						<configuration>
+							<connectionType>connection</connectionType>
+							<connectionUrl>${connectionDF}</connectionUrl>
+							<checkoutDirectory>${checkoutDF}</checkoutDirectory>
+							<useExport>true</useExport>
+						</configuration>
+						<executions>
+							<execution>
+								<id>checkout-sources</id>
+								<phase>generate-sources</phase>
+								<goals>
+									<goal>checkout</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-resources-plugin</artifactId>
+						<version>2.4</version>
+						<configuration>
+							<encoding>UTF-8</encoding>
+						</configuration>
+						<executions>
+							<execution>
+								<id>copy-sources-after-checkout</id>
+								<phase>process-sources</phase>
+								<goals>
+									<goal>copy-resources</goal>
+								</goals>
+								<configuration>
+									<overwrite>true</overwrite>
+									<resources>
+										<resource>
+											<directory> ${checkoutDF}/${moduleDF}</directory>
+											<filtering>false</filtering>
+										</resource>
+									</resources>
+									<outputDirectory>${targetDF}</outputDirectory>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+
+				</plugins>
+
+			</build>
+
+		</profile>
+
+	</profiles>
+
 </project>
