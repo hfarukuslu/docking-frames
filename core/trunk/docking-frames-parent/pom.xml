@@ -43,4 +43,79 @@
 		<module>../docking-frames-framework</module>
 	</modules>
 
+	<developers>
+		<developer>
+			<id>benjamin_sigg@gmx.ch</id>
+			<email>benjamin_sigg@gmx.ch</email>
+			<name>Benjamin Sigg</name>
+			<roles>
+				<role>owner</role>
+			</roles>
+		</developer>
+		<developer>
+			<id>Janni Kovacs</id>
+			<email>Janni Kovacs</email>
+			<name>Janni Kovacs</name>
+			<roles>
+				<role>contributor</role>
+			</roles>
+		</developer>
+		<developer>
+			<id>Ivan Seidl</id>
+			<email>Ivan Seidl</email>
+			<name>Ivan Seidl</name>
+			<roles>
+				<role>contributor</role>
+			</roles>
+		</developer>
+		<developer>
+			<id>scrnick</id>
+			<email>scrnick</email>
+			<name>scrnick</name>
+			<roles>
+				<role>contributor</role>
+			</roles>
+		</developer>
+		<developer>
+			<id>scrnick</id>
+			<email>scrnick</email>
+			<name>scrnick</name>
+			<roles>
+				<role>contributor</role>
+			</roles>
+		</developer>
+		<developer>
+			<id>Parag Shah</id>
+			<email>Parag Shah</email>
+			<name>Parag Shah</name>
+			<roles>
+				<role>contributor</role>
+			</roles>
+		</developer>
+		<developer>
+			<id>Steffen Kux</id>
+			<email>Steffen Kux</email>
+			<name>Steffen Kux</name>
+			<roles>
+				<role>contributor</role>
+			</roles>
+		</developer>
+		<developer>
+			<id>Thomas Hilbert</id>
+			<email>Thomas Hilbert</email>
+			<name>Thomas Hilbert</name>
+			<roles>
+				<role>contributor</role>
+			</roles>
+		</developer>
+		<developer>
+			<id>andrei.pozolotin@gmail.com</id>
+			<email>andrei.pozolotin@gmail.com</email>
+			<name>Andrei Pozolotin</name>
+			<roles>
+				<role>contributor</role>
+			</roles>
+		</developer>
+	</developers>
+
 </project>
