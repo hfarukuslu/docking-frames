@@ -27,8 +27,10 @@
 	</organization>
 
 	<scm>
-		<connection>scm:svn:http://docking-frames.googlecode.com/svn/</connection>
-		<developerConnection>scm:svn:https://docking-frames.googlecode.com/svn/</developerConnection>
+		<connection>scm:svn:http://docking-frames.googlecode.com/svn/
+		</connection>
+		<developerConnection>scm:svn:https://docking-frames.googlecode.com/svn/
+		</developerConnection>
 		<url>http://code.google.com/p/docking-frames/source/browse/</url>
 	</scm>
 
@@ -146,9 +148,11 @@
 
 		<build-version>1.0.8-SNAPSHOT</build-version>
 
-		<repo-connection>scm:svn:http://svn.javaforge.com/svn/DockingFrames/trunk</repo-connection>
+		<repo-connection>scm:svn:http://svn.javaforge.com/svn/DockingFrames/trunk
+		</repo-connection>
 		<repo-target>${project.build.directory}/checkout</repo-target>
-		<repo-module>you-must-override-this-property-in-each-module</repo-module>
+		<repo-module>you-must-override-this-property-in-each-module
+		</repo-module>
 
 		<module-src-main-java>src</module-src-main-java>
 		<module-src-test-java>testing</module-src-test-java>
@@ -242,7 +246,8 @@
 						<artifactId>maven-scm-plugin</artifactId>
 						<version>1.4</version>
 						<configuration>
-							<developerConnectionUrl>${project.scm.developerConnection}/code/trunk/</developerConnectionUrl>
+							<developerConnectionUrl>${project.scm.developerConnection}/code/trunk/
+							</developerConnectionUrl>
 							<message>auto-save</message>
 						</configuration>
 						<executions>
@@ -281,5 +286,22 @@
 		</plugins>
 
 	</build>
+
+	<reporting>
+
+		<plugins>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<version>2.7</version>
+				<configuration>
+				</configuration>
+			</plugin>
+
+		</plugins>
+
+	</reporting>
+
 
 </project>
