@@ -161,7 +161,7 @@
 
 			<!-- get updated docking-frames sources form java-forge -->
 
-			<id>checkout-compile-checkin</id>
+			<id>checkout-copy-checkin</id>
 
 			<activation>
 				<file>
