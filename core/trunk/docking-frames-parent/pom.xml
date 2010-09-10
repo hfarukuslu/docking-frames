@@ -147,10 +147,11 @@
 	</developers>
 
 	<properties>
-		<connectionDF>scm:svn:http://svn.javaforge.com/svn/DockingFrames/trunk</connectionDF>
-		<checkoutDF>${project.build.directory}/checkout</checkoutDF>
-		<moduleDF>common</moduleDF>
-		<targetDF>target/test</targetDF>
+		<repo-connection>scm:svn:http://svn.javaforge.com/svn/DockingFrames/trunk</repo-connection>
+		<repo-target>${project.build.directory}/checkout</repo-target>
+		<repo-module>glass</repo-module>
+		<module-src-main-java>src</module-src-main-java>
+		<module-src-test-java>testing</module-src-test-java>
 	</properties>
 
 	<profiles>
@@ -161,6 +162,11 @@
 
 			<id>checkout</id>
 
+			<activation>
+				<file>
+					<missing>checkout-ignored.txt</missing>
+				</file>
+			</activation>
 			<build>
 
 				<plugins>
@@ -171,8 +177,8 @@
 						<version>1.4</version>
 						<configuration>
 							<connectionType>connection</connectionType>
-							<connectionUrl>${connectionDF}/${moduleDF}</connectionUrl>
-							<checkoutDirectory>${checkoutDF}</checkoutDirectory>
+							<connectionUrl>${repo-connection}/${repo-module}</connectionUrl>
+							<checkoutDirectory>${repo-target}</checkoutDirectory>
 							<skipCheckoutIfExists>true</skipCheckoutIfExists>
 						</configuration>
 						<executions>
@@ -181,6 +187,13 @@
 								<phase>generate-sources</phase>
 								<goals>
 									<goal>checkout</goal>
+								</goals>
+							</execution>
+							<execution>
+								<id>update</id>
+								<phase>generate-sources</phase>
+								<goals>
+									<goal>update</goal>
 								</goals>
 							</execution>
 						</executions>
@@ -195,7 +208,7 @@
 						</configuration>
 						<executions>
 							<execution>
-								<id>copy-sources-after-checkout</id>
+								<id>copy-src-main-java</id>
 								<phase>process-sources</phase>
 								<goals>
 									<goal>copy-resources</goal>
@@ -204,15 +217,45 @@
 									<overwrite>true</overwrite>
 									<resources>
 										<resource>
-											<directory> ${checkoutDF}/${moduleDF}</directory>
+											<directory> ${repo-target}/${module-src-main-java}
+											</directory>
 											<filtering>false</filtering>
 										</resource>
 									</resources>
-									<outputDirectory>${targetDF}</outputDirectory>
+									<outputDirectory>src/main/java</outputDirectory>
+								</configuration>
+							</execution>
+							<execution>
+								<id>copy-src-test-java</id>
+								<phase>process-sources</phase>
+								<goals>
+									<goal>copy-resources</goal>
+								</goals>
+								<configuration>
+									<overwrite>true</overwrite>
+									<resources>
+										<resource>
+											<directory> ${repo-target}/${module-src-test-java}
+											</directory>
+											<filtering>false</filtering>
+										</resource>
+									</resources>
+									<outputDirectory>src/test/java</outputDirectory>
 								</configuration>
 							</execution>
 						</executions>
 					</plugin>
+
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-compiler-plugin</artifactId>
+						<version>2.3.2</version>
+						<configuration>
+							<source>1.5</source>
+							<target>1.5</target>
+						</configuration>
+					</plugin>
+
 
 				</plugins>
 
