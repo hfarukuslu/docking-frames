@@ -40,11 +40,6 @@
 		</license>
 	</licenses>
 
-	<modules>
-		<module>../docking-frames-core</module>
-		<module>../docking-frames-common</module>
-	</modules>
-
 	<developers>
 		<developer>
 			<id>benjamin_sigg@gmx.ch</id>
