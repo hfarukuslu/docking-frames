@@ -13,4 +13,70 @@
 	<version>${build-version}</version>
 	<packaging>jar</packaging>
 
+	<dependencies>
+
+		<dependency>
+			<groupId>org.dockingframes</groupId>
+			<artifactId>docking-frames-common</artifactId>
+			<version>${build-version}</version>
+			<type>jar</type>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.dockingframes</groupId>
+			<artifactId>docking-frames-demo-app-ice</artifactId>
+			<version>${build-version}</version>
+			<type>jar</type>
+			<scope>compile</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.dockingframes</groupId>
+			<artifactId>docking-frames-demo-chess</artifactId>
+			<version>${build-version}</version>
+			<type>jar</type>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.dockingframes</groupId>
+			<artifactId>docking-frames-demo-help</artifactId>
+			<version>${build-version}</version>
+			<type>jar</type>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.dockingframes</groupId>
+			<artifactId>docking-frames-demo-layouts</artifactId>
+			<version>${build-version}</version>
+			<type>jar</type>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.dockingframes</groupId>
+			<artifactId>docking-frames-demo-notes</artifactId>
+			<version>${build-version}</version>
+			<type>jar</type>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.dockingframes</groupId>
+			<artifactId>docking-frames-demo-paint</artifactId>
+			<version>${build-version}</version>
+			<type>jar</type>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.dockingframes</groupId>
+			<artifactId>docking-frames-demo-size-and-color</artifactId>
+			<version>${build-version}</version>
+			<type>jar</type>
+			<scope>compile</scope>
+		</dependency>
+
+	</dependencies>
+
+	<properties>
+		<repo-module>demonstration</repo-module>
+	</properties>
+
 </project>
