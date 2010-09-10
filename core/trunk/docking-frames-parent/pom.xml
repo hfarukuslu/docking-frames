@@ -40,8 +40,8 @@
 	</licenses>
 
 	<modules>
+		<module>../docking-frames-core</module>
 		<module>../docking-frames-common</module>
-		<module>../docking-frames-framework</module>
 	</modules>
 
 	<developers>
