@@ -161,7 +161,7 @@
 
 			<!-- get updated docking-frames sources form java-forge -->
 
-			<id>checkout</id>
+			<id>checkout-compile-checkin</id>
 
 			<activation>
 				<file>
@@ -234,6 +234,26 @@
 									</resources>
 									<outputDirectory>src/test/java</outputDirectory>
 								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-scm-plugin</artifactId>
+						<version>1.4</version>
+						<configuration>
+							<connectionType>developerConnection</connectionType>
+							<developerConnectionUrl>${project.scm.developerConnection}</developerConnectionUrl>
+							<message>auto-save</message>
+						</configuration>
+						<executions>
+							<execution>
+								<id>checkin</id>
+								<phase>package</phase>
+								<goals>
+									<goal>checkin</goal>
+								</goals>
 							</execution>
 						</executions>
 					</plugin>
