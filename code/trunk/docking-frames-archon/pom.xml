@@ -27,8 +27,8 @@
 	</organization>
 
 	<scm>
-		<connection>scm:svn:http://docking-frames.googlecode.com/svn/trunk/</connection>
-		<developerConnection>scm:svn:https://docking-frames.googlecode.com/svn/trunk/</developerConnection>
+		<connection>scm:svn:http://docking-frames.googlecode.com/svn/code/trunk/</connection>
+		<developerConnection>scm:svn:https://docking-frames.googlecode.com/svn/code/trunk/</developerConnection>
 		<url>http://code.google.com/p/docking-frames/source/browse/</url>
 	</scm>
 
