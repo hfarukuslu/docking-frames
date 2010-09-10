@@ -159,7 +159,7 @@
 
 		<profile>
 
-			<!-- get updated docking-frames sources form java forge -->
+			<!-- get updated docking-frames sources form java-forge -->
 
 			<id>checkout</id>
 
