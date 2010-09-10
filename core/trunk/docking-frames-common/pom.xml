@@ -13,4 +13,8 @@
 	<artifactId>docking-frames-common</artifactId>
 	<packaging>jar</packaging>
 
+	<properties>
+		<moduleDF>common</moduleDF>
+	</properties>
+
 </project>

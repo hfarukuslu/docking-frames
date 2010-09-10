@@ -13,4 +13,8 @@
 	<artifactId>docking-frames-framework</artifactId>
 	<packaging>jar</packaging>
 
+	<properties>
+		<moduleDF>dockingFrames</moduleDF>
+	</properties>
+
 </project>

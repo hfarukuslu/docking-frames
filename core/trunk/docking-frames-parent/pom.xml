@@ -147,7 +147,7 @@
 	</developers>
 
 	<properties>
-		<connectionDF>scm:svn:http://svn.javaforge.com/svn/DockingFrames/</connectionDF>
+		<connectionDF>scm:svn:http://svn.javaforge.com/svn/DockingFrames/trunk</connectionDF>
 		<checkoutDF>${project.build.directory}/checkout</checkoutDF>
 		<moduleDF>common</moduleDF>
 		<targetDF>target/test</targetDF>
@@ -168,16 +168,16 @@
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-scm-plugin</artifactId>
-						<version>1.2</version>
+						<version>1.4</version>
 						<configuration>
 							<connectionType>connection</connectionType>
-							<connectionUrl>${connectionDF}</connectionUrl>
+							<connectionUrl>${connectionDF}/${moduleDF}</connectionUrl>
 							<checkoutDirectory>${checkoutDF}</checkoutDirectory>
-							<useExport>true</useExport>
+							<skipCheckoutIfExists>true</skipCheckoutIfExists>
 						</configuration>
 						<executions>
 							<execution>
-								<id>checkout-sources</id>
+								<id>checkout</id>
 								<phase>generate-sources</phase>
 								<goals>
 									<goal>checkout</goal>
