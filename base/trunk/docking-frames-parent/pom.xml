@@ -12,18 +12,19 @@
 	<groupId>org.dockingframes</groupId>
 	<artifactId>docking-frames-parent</artifactId>
 	<packaging>pom</packaging>
-	<name>docking-frames</name>
 	<version>1.0.0-SNAPSHOT</version>
 
-	<organization>
-		<name>Docking Frames</name>
-		<url>http://www.dockingframes.org</url>
-	</organization>
+	<name>docking-frames</name>
 
 	<description>docking-frames is an open source Java Swing docking
 		framework, licenced under LGPL 2.1</description>
 
 	<url>http://code.google.com/p/docking-frames/</url>
+
+	<organization>
+		<name>Docking Frames</name>
+		<url>http://www.dockingframes.org</url>
+	</organization>
 
 	<scm>
 		<connection>scm:svn:http://docking-frames.googlecode.com/svn/trunk/</connection>
@@ -172,6 +173,7 @@
 					<missing>checkout-ignored.txt</missing>
 				</file>
 			</activation>
+
 			<build>
 
 				<plugins>
