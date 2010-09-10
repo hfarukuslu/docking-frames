@@ -152,7 +152,7 @@
 
 		<repo-connection>scm:svn:http://svn.javaforge.com/svn/DockingFrames/trunk</repo-connection>
 		<repo-target>${project.build.directory}/checkout</repo-target>
-		<repo-module>demonstration_interface</repo-module>
+		<repo-module>you-must-override-this-property-in-each-module</repo-module>
 
 		<module-src-main-java>src</module-src-main-java>
 		<module-src-test-java>testing</module-src-test-java>
