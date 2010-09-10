@@ -27,8 +27,8 @@
 	</organization>
 
 	<scm>
-		<connection>scm:svn:http://docking-frames.googlecode.com/svn/code/trunk/</connection>
-		<developerConnection>scm:svn:https://docking-frames.googlecode.com/svn/code/trunk/</developerConnection>
+		<connection>scm:svn:http://docking-frames.googlecode.com/svn/</connection>
+		<developerConnection>scm:svn:https://docking-frames.googlecode.com/svn/</developerConnection>
 		<url>http://code.google.com/p/docking-frames/source/browse/</url>
 	</scm>
 
@@ -178,13 +178,12 @@
 						<artifactId>maven-scm-plugin</artifactId>
 						<version>1.4</version>
 						<configuration>
-							<connectionType>connection</connectionType>
 							<connectionUrl>${repo-connection}/${repo-module}</connectionUrl>
 							<checkoutDirectory>${repo-target}</checkoutDirectory>
 						</configuration>
 						<executions>
 							<execution>
-								<id>checkout</id>
+								<id>checkout-java-forge</id>
 								<phase>generate-sources</phase>
 								<goals>
 									<goal>checkout</goal>
@@ -215,7 +214,7 @@
 											<filtering>false</filtering>
 										</resource>
 									</resources>
-									<outputDirectory>src/main/java</outputDirectory>
+									<outputDirectory>${basedir}/src/main/java</outputDirectory>
 								</configuration>
 							</execution>
 							<execution>
@@ -232,7 +231,7 @@
 											<filtering>false</filtering>
 										</resource>
 									</resources>
-									<outputDirectory>src/test/java</outputDirectory>
+									<outputDirectory>${basedir}/src/test/java</outputDirectory>
 								</configuration>
 							</execution>
 						</executions>
@@ -243,13 +242,12 @@
 						<artifactId>maven-scm-plugin</artifactId>
 						<version>1.4</version>
 						<configuration>
-							<connectionType>developerConnection</connectionType>
-							<developerConnectionUrl>${project.scm.developerConnection}</developerConnectionUrl>
+							<developerConnectionUrl>${project.scm.developerConnection}/code/trunk/</developerConnectionUrl>
 							<message>auto-save</message>
 						</configuration>
 						<executions>
 							<execution>
-								<id>checkin</id>
+								<id>checkin-google-code</id>
 								<phase>package</phase>
 								<goals>
 									<goal>checkin</goal>
