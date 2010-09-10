@@ -184,7 +184,6 @@
 							<connectionType>connection</connectionType>
 							<connectionUrl>${repo-connection}/${repo-module}</connectionUrl>
 							<checkoutDirectory>${repo-target}</checkoutDirectory>
-							<skipCheckoutIfExists>true</skipCheckoutIfExists>
 						</configuration>
 						<executions>
 							<execution>
@@ -192,13 +191,6 @@
 								<phase>generate-sources</phase>
 								<goals>
 									<goal>checkout</goal>
-								</goals>
-							</execution>
-							<execution>
-								<id>update</id>
-								<phase>generate-sources</phase>
-								<goals>
-									<goal>update</goal>
 								</goals>
 							</execution>
 						</executions>

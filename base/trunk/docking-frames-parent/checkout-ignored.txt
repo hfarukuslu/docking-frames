@@ -1,1 +1,1 @@
-use this file presence to disable "checkout" profile
+flag file; the presence of this file will disable "checkout" profile
