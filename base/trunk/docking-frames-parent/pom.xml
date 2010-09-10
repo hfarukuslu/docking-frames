@@ -13,7 +13,7 @@
 	<artifactId>docking-frames-parent</artifactId>
 	<packaging>pom</packaging>
 	<name>docking-frames</name>
-	<version>1.0.8-SNAPSHOT</version>
+	<version>1.0.0-SNAPSHOT</version>
 
 	<organization>
 		<name>Docking Frames</name>
@@ -147,11 +147,16 @@
 	</developers>
 
 	<properties>
+
+		<applicationVersion>1.0.8-SNAPSHOT</applicationVersion>
+
 		<repo-connection>scm:svn:http://svn.javaforge.com/svn/DockingFrames/trunk</repo-connection>
 		<repo-target>${project.build.directory}/checkout</repo-target>
 		<repo-module>glass</repo-module>
+
 		<module-src-main-java>src</module-src-main-java>
 		<module-src-test-java>testing</module-src-test-java>
+
 	</properties>
 
 	<profiles>

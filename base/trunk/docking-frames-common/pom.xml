@@ -6,18 +6,18 @@
 	<parent>
 		<artifactId>docking-frames-parent</artifactId>
 		<groupId>org.dockingframes</groupId>
-		<version>1.0.8-SNAPSHOT</version>
+		<version>1.0.0-SNAPSHOT</version>
 	</parent>
 
-	<groupId>org.dockingframes</groupId>
 	<artifactId>docking-frames-common</artifactId>
+	<version>${applicationVersion}</version>
 	<packaging>jar</packaging>
 
 	<dependencies>
 		<dependency>
 			<groupId>org.dockingframes</groupId>
 			<artifactId>docking-frames-core</artifactId>
-			<version>${parent.version}</version>
+			<version>${applicationVersion}</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
