@@ -148,11 +148,11 @@
 
 	<properties>
 
-		<applicationVersion>1.0.8-SNAPSHOT</applicationVersion>
+		<build-version>1.0.8-SNAPSHOT</build-version>
 
 		<repo-connection>scm:svn:http://svn.javaforge.com/svn/DockingFrames/trunk</repo-connection>
 		<repo-target>${project.build.directory}/checkout</repo-target>
-		<repo-module>glass</repo-module>
+		<repo-module>demonstration_interface</repo-module>
 
 		<module-src-main-java>src</module-src-main-java>
 		<module-src-test-java>testing</module-src-test-java>
@@ -222,8 +222,7 @@
 									<overwrite>true</overwrite>
 									<resources>
 										<resource>
-											<directory> ${repo-target}/${module-src-main-java}
-											</directory>
+											<directory>${repo-target}/${module-src-main-java}</directory>
 											<filtering>false</filtering>
 										</resource>
 									</resources>
@@ -240,8 +239,7 @@
 									<overwrite>true</overwrite>
 									<resources>
 										<resource>
-											<directory> ${repo-target}/${module-src-test-java}
-											</directory>
+											<directory>${repo-target}/${module-src-test-java}</directory>
 											<filtering>false</filtering>
 										</resource>
 									</resources>

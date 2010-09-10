@@ -10,14 +10,14 @@
 	</parent>
 
 	<artifactId>docking-frames-common</artifactId>
-	<version>${applicationVersion}</version>
+	<version>${build-version}</version>
 	<packaging>jar</packaging>
 
 	<dependencies>
 		<dependency>
 			<groupId>org.dockingframes</groupId>
 			<artifactId>docking-frames-core</artifactId>
-			<version>${applicationVersion}</version>
+			<version>${build-version}</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>

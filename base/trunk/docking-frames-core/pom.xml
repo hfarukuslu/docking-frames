@@ -10,7 +10,7 @@
 	</parent>
 
 	<artifactId>docking-frames-core</artifactId>
-	<version>${applicationVersion}</version>
+	<version>${build-version}</version>
 	<packaging>jar</packaging>
 
 	<properties>
