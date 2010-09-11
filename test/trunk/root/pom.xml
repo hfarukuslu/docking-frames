@@ -5,11 +5,11 @@
 	<groupId>org.dockingframes</groupId>
 	<artifactId>root</artifactId>
 	<packaging>pom</packaging>
-	<version>1.0.0</version>
+	<version>1.0.1-SNAPSHOT</version>
 
 	<scm>
-		<connection>scm:svn:https://docking-frames.googlecode.com/svn/test/tags/root-1.0.0</connection>
-		<developerConnection>scm:svn:https://docking-frames.googlecode.com/svn/test/tags/root-1.0.0</developerConnection>
+		<connection>scm:svn:https://docking-frames.googlecode.com/svn/test/trunk/</connection>
+		<developerConnection>scm:svn:https://docking-frames.googlecode.com/svn/test/trunk/</developerConnection>
 	</scm>
 
 	<modules>
