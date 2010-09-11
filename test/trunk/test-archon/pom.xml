@@ -5,11 +5,11 @@
 	<groupId>org.dockingframes</groupId>
 	<artifactId>test-archon</artifactId>
 	<packaging>pom</packaging>
-	<version>1.0.3-SNAPSHOT</version>
+	<version>1.0.3</version>
 
 	<scm>
-		<connection>scm:svn:https://docking-frames.googlecode.com/svn/test/trunk</connection>
-		<developerConnection>scm:svn:https://docking-frames.googlecode.com/svn/test/trunk</developerConnection>
+		<connection>scm:svn:https://docking-frames.googlecode.com/svn/test/tags/test-archon-1.0.3/trunk</connection>
+		<developerConnection>scm:svn:https://docking-frames.googlecode.com/svn/test/tags/test-archon-1.0.3/trunk</developerConnection>
 	</scm>
 
 	<modules>
