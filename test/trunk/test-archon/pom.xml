@@ -8,8 +8,8 @@
 	<version>1.0.6-SNAPSHOT</version>
 
 	<modules>
-		<module>../test-mod-1</module>
-		<module>../test-mod-2</module>
+		<module>test-mod-1</module>
+		<module>test-mod-2</module>
 	</modules>
 
 	<build>
