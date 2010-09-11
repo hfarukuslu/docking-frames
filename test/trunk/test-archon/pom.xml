@@ -12,6 +12,11 @@
 		<module>test-mod-2</module>
 	</modules>
 
+	<scm>
+		<connection>scm:svn:https://docking-frames.googlecode.com/svn/test/trunk/test-archon</connection>
+		<developerConnection>scm:svn:https://docking-frames.googlecode.com/svn/test/trunk/test-archon</developerConnection>
+	</scm>
+
 	<build>
 
 		<pluginManagement>
