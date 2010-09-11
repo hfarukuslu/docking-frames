@@ -6,7 +6,7 @@
 		<artifactId>test-archon</artifactId>
 		<groupId>org.dockingframes</groupId>
 		<version>1.0.5-SNAPSHOT</version>
-		<relativePath>../test-archon/pom.xml</relativePath>
+		<relativePath>../test-archon</relativePath>
 	</parent>
 
 	<artifactId>test-mod-1</artifactId>
