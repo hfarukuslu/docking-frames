@@ -5,7 +5,7 @@
 	<groupId>org.dockingframes</groupId>
 	<artifactId>test-archon</artifactId>
 	<packaging>pom</packaging>
-	<version>1.0.5-SNAPSHOT</version>
+	<version>1.0.5</version>
 
 	<modules>
 		<module>../test-mod-1</module>
