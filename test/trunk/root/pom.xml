@@ -8,6 +8,12 @@
 	<artifactId>root</artifactId>
 	<packaging>pom</packaging>
 	<version>1.0.0</version>
+
+	<scm>
+		<connection>scm:svn:https://docking-frames.googlecode.com/svn/test/trunk/</connection>
+		<developerConnection>scm:svn:https://docking-frames.googlecode.com/svn/test/trunk/</developerConnection>
+	</scm>
+
 	<modules>
 		<module>test-archon</module>
 	</modules>

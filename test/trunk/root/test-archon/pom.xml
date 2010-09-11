@@ -7,11 +7,6 @@
 	<packaging>pom</packaging>
 	<version>1.0.5-SNAPSHOT</version>
 
-	<scm>
-		<connection>scm:svn:https://docking-frames.googlecode.com/svn/test/trunk</connection>
-		<developerConnection>scm:svn:https://docking-frames.googlecode.com/svn/test/trunk</developerConnection>
-	</scm>
-
 	<modules>
 		<module>../test-mod-1</module>
 		<module>../test-mod-2</module>
