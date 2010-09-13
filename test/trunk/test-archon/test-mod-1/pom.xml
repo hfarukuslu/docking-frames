@@ -9,6 +9,5 @@
 	</parent>
 
 	<artifactId>test-mod-1</artifactId>
-	<version>1.1.1-SNAPSHOT</version>
 
 </project>
