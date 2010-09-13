@@ -6,11 +6,10 @@
 	<parent>
 		<artifactId>docking-frames-archon</artifactId>
 		<groupId>org.dockingframes</groupId>
-		<version>1.0.0-SNAPSHOT</version>
+		<version>1.0.8-SNAPSHOT</version>
 	</parent>
 
 	<artifactId>docking-frames-core</artifactId>
-	<version>${build-version}</version>
 	<packaging>jar</packaging>
 
 	<properties>
