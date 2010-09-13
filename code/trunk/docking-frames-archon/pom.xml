@@ -303,48 +303,6 @@
 				</plugin>
 
 				<plugin>
-					<groupId>org.codehaus.mojo</groupId>
-					<artifactId>cobertura-maven-plugin</artifactId>
-					<version>2.4</version>
-				</plugin>
-
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-project-info-reports-plugin</artifactId>
-					<version>2.2</version>
-				</plugin>
-
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-javadoc-plugin</artifactId>
-					<version>2.7</version>
-				</plugin>
-
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-surefire-report-plugin</artifactId>
-					<version>2.6</version>
-				</plugin>
-
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-checkstyle-plugin</artifactId>
-					<version>2.5</version>
-				</plugin>
-
-				<plugin>
-					<groupId>org.codehaus.mojo</groupId>
-					<artifactId>findbugs-maven-plugin</artifactId>
-					<version>2.3.1</version>
-				</plugin>
-
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-jxr-plugin</artifactId>
-					<version>2.2</version>
-				</plugin>
-
-				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-resources-plugin</artifactId>
 					<version>2.4</version>
@@ -382,6 +340,7 @@
 			<!-- <plugin> -->
 			<!-- <groupId>org.codehaus.mojo</groupId> -->
 			<!-- <artifactId>cobertura-maven-plugin</artifactId> -->
+			<!-- <version>2.4</version> -->
 			<!-- <configuration> -->
 			<!-- <formats> -->
 			<!-- <format>xml</format> -->
@@ -393,6 +352,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-project-info-reports-plugin</artifactId>
+				<version>2.2</version>
 				<reportSets>
 					<reportSet>
 						<reports>
@@ -415,6 +375,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-jxr-plugin</artifactId>
+				<version>2.2</version>
 				<configuration>
 					<linkJavadoc>true</linkJavadoc>
 					<!-- <javadocDir>/path/to/javadocs</javadocDir> -->
@@ -424,6 +385,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-javadoc-plugin</artifactId>
+				<version>2.7</version>
 				<configuration>
 					<quiet>true</quiet>
 					<verbose>false</verbose>
@@ -444,6 +406,7 @@
 			<!-- <plugin> -->
 			<!-- <groupId>org.apache.maven.plugins</groupId> -->
 			<!-- <artifactId>maven-surefire-report-plugin</artifactId> -->
+			<!-- <version>2.6</version> -->
 			<!-- <reportSets> -->
 			<!-- <reportSet> -->
 			<!-- <reports> -->
@@ -456,6 +419,7 @@
 			<!-- <plugin> -->
 			<!-- <groupId>org.apache.maven.plugins</groupId> -->
 			<!-- <artifactId>maven-checkstyle-plugin</artifactId> -->
+			<!-- <version>2.5</version> -->
 			<!-- <configuration> -->
 			<!-- <configLocation>checkstyle/checkstyle_checks.xml</configLocation> -->
 			<!-- </configuration> -->
@@ -464,6 +428,7 @@
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>findbugs-maven-plugin</artifactId>
+				<version>2.3.1</version>
 			</plugin>
 
 		</plugins>
