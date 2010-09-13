@@ -159,8 +159,8 @@
 	<properties>
 
 		<repo-connection>scm:svn:http://svn.javaforge.com/svn/DockingFrames/trunk</repo-connection>
-		<repo-target>${project.build.directory}/checkout-java-forge</repo-target>
 		<repo-module>you-must-override-this-property-in-each-module</repo-module>
+		<repodir>${project.build.directory}/checkout-java-forge</repodir>
 
 		<module-src-main-java>src</module-src-main-java>
 		<module-src-test-java>testing</module-src-test-java>
@@ -190,12 +190,12 @@
 						<artifactId>maven-scm-plugin</artifactId>
 						<configuration>
 							<connectionUrl>${repo-connection}/${repo-module}</connectionUrl>
-							<checkoutDirectory>${repo-target}</checkoutDirectory>
+							<checkoutDirectory>${repodir}</checkoutDirectory>
 						</configuration>
 						<executions>
 							<execution>
 								<id>checkout-java-forge</id>
-								<phase>validate</phase>
+								<phase>generate-sources</phase>
 								<goals>
 									<goal>checkout</goal>
 								</goals>
@@ -220,7 +220,7 @@
 									<overwrite>true</overwrite>
 									<resources>
 										<resource>
-											<directory>${repo-target}/${module-src-main-java}</directory>
+											<directory>${repodir}/${module-src-main-java}</directory>
 											<filtering>false</filtering>
 										</resource>
 									</resources>
@@ -237,7 +237,7 @@
 									<overwrite>true</overwrite>
 									<resources>
 										<resource>
-											<directory>${repo-target}/${module-src-test-java}</directory>
+											<directory>${repodir}/${module-src-test-java}</directory>
 											<filtering>false</filtering>
 										</resource>
 									</resources>
