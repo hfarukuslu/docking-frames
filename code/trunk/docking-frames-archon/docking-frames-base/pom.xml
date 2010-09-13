@@ -12,6 +12,7 @@
 	<artifactId>docking-frames-base</artifactId>
 	<packaging>jar</packaging>
 
+	<name>docking frames: base or core library</name>
 	<properties>
 		<repo-module>dockingFrames</repo-module>
 	</properties>

@@ -12,6 +12,7 @@
 	<artifactId>docking-frames-demo-app</artifactId>
 	<packaging>jar</packaging>
 
+	<name>docking frames: demonstration bundle application</name>
 	<dependencies>
 
 		<dependency>

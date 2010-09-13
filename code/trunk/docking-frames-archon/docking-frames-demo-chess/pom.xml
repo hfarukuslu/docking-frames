@@ -12,6 +12,7 @@
 	<artifactId>docking-frames-demo-chess</artifactId>
 	<packaging>jar</packaging>
 
+	<name>docking frames: demonstration of chess gui</name>
 	<dependencies>
 		<dependency>
 			<groupId>org.dockingframes</groupId>

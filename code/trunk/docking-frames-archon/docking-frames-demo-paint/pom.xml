@@ -12,6 +12,7 @@
 	<artifactId>docking-frames-demo-paint</artifactId>
 	<packaging>jar</packaging>
 
+	<name>docking frames: demonstration drawing program</name>
 	<dependencies>
 		<dependency>
 			<groupId>org.dockingframes</groupId>

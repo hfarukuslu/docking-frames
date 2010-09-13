@@ -12,6 +12,7 @@
 	<artifactId>docking-frames-common</artifactId>
 	<packaging>jar</packaging>
 
+	<name>docking frames: higher-level framework</name>
 	<dependencies>
 		<dependency>
 			<groupId>org.dockingframes</groupId>

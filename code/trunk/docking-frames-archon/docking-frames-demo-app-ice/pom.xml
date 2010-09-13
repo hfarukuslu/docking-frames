@@ -12,6 +12,7 @@
 	<artifactId>docking-frames-demo-app-ice</artifactId>
 	<packaging>jar</packaging>
 
+	<name>docking frames: demonstration aplication glue interface</name>
 	<dependencies>
 		<dependency>
 			<groupId>org.dockingframes</groupId>

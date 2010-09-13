@@ -28,7 +28,7 @@
 		<module>docking-frames-demo-tutorial</module>
 	</modules>
 
-	<name>docking-frames</name>
+	<name>docking frames: configuration parent</name>
 
 	<description>docking-frames is an open source Java Swing docking
 		framework, licenced under LGPL 2.1</description>

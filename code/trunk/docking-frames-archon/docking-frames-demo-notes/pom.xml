@@ -12,6 +12,7 @@
 	<artifactId>docking-frames-demo-notes</artifactId>
 	<packaging>jar</packaging>
 
+	<name>docking frames: demonstration notes taker application</name>
 	<dependencies>
 		<dependency>
 			<groupId>org.dockingframes</groupId>

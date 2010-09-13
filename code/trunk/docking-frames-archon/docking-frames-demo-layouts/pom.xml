@@ -12,6 +12,7 @@
 	<artifactId>docking-frames-demo-layouts</artifactId>
 	<packaging>jar</packaging>
 
+	<name>docking frames: demonstration of layout styles</name>
 	<dependencies>
 		<dependency>
 			<groupId>org.dockingframes</groupId>
