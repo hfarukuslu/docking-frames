@@ -17,7 +17,7 @@
 			<groupId>org.dockingframes</groupId>
 			<artifactId>docking-frames-base</artifactId>
 			<type>jar</type>
-			<version>${parent.version}</version>
+			<version>${project.version}</version>
 			<scope>compile</scope>
 		</dependency>
 	</dependencies>

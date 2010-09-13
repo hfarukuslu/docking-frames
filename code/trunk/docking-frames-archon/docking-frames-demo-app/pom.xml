@@ -18,12 +18,14 @@
 			<groupId>org.dockingframes</groupId>
 			<artifactId>docking-frames-common</artifactId>
 			<type>jar</type>
+			<version>${parent.version}</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.dockingframes</groupId>
 			<artifactId>docking-frames-demo-app-ice</artifactId>
 			<type>jar</type>
+			<version>${parent.version}</version>
 			<scope>compile</scope>
 		</dependency>
 
@@ -31,36 +33,42 @@
 			<groupId>org.dockingframes</groupId>
 			<artifactId>docking-frames-demo-chess</artifactId>
 			<type>jar</type>
+			<version>${parent.version}</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.dockingframes</groupId>
 			<artifactId>docking-frames-demo-help</artifactId>
 			<type>jar</type>
+			<version>${parent.version}</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.dockingframes</groupId>
 			<artifactId>docking-frames-demo-layouts</artifactId>
 			<type>jar</type>
+			<version>${parent.version}</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.dockingframes</groupId>
 			<artifactId>docking-frames-demo-notes</artifactId>
 			<type>jar</type>
+			<version>${parent.version}</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.dockingframes</groupId>
 			<artifactId>docking-frames-demo-paint</artifactId>
 			<type>jar</type>
+			<version>${parent.version}</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.dockingframes</groupId>
 			<artifactId>docking-frames-demo-size-and-color</artifactId>
 			<type>jar</type>
+			<version>${parent.version}</version>
 			<scope>compile</scope>
 		</dependency>
 
