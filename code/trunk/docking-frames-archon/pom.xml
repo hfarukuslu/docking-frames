@@ -160,8 +160,6 @@
 
 	<properties>
 
-		<build-version>1.0.8-SNAPSHOT</build-version>
-
 		<repo-connection>scm:svn:http://svn.javaforge.com/svn/DockingFrames/trunk
 		</repo-connection>
 		<repo-target>${project.build.directory}/checkout</repo-target>
