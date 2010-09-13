@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
 	<parent>
 		<artifactId>oss-parent</artifactId>
@@ -13,15 +14,13 @@
 	<version>1.0.14-SNAPSHOT</version>
 
 	<modules>
-		<module>test-mod-1</module>
-		<module>test-mod-2</module>
 	</modules>
 
 	<scm>
-		<connection>scm:svn:https://docking-frames.googlecode.com/svn/test/trunk/test-archon</connection>
-		<developerConnection>scm:svn:https://docking-frames.googlecode.com/svn/test/trunk/test-archon</developerConnection>
-	  <url>http://svn.sonatype.org/spice/tags/oss-parent-5/test-archon</url>
-  </scm>
+		<connection>scm:svn:https://docking-frames.googlecode.com/svn/test/trunk</connection>
+		<developerConnection>scm:svn:https://docking-frames.googlecode.com/svn/test/trunk</developerConnection>
+		<url>http://svn.sonatype.org/spice/tags/oss-parent-5/test-archon</url>
+	</scm>
 
 	<build>
 
