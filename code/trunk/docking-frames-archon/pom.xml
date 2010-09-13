@@ -40,9 +40,9 @@
 	</organization>
 
 	<scm>
-		<connection>scm:svn:http://docking-frames.googlecode.com/svn/tags/docking-frames-archon-1.0.8</connection>
-		<developerConnection>scm:svn:https://docking-frames.googlecode.com/svn/tags/docking-frames-archon-1.0.8</developerConnection>
-		<url>http://code.google.com/p/docking-frames/source/browse/tags/docking-frames-archon-1.0.8</url>
+		<connection>scm:svn:http://docking-frames.googlecode.com/svn/code/</connection>
+		<developerConnection>scm:svn:https://docking-frames.googlecode.com/svn/code</developerConnection>
+		<url>http://code.google.com/p/docking-frames/source/browse#svn/code</url>
 	</scm>
 
 	<licenses>
@@ -250,7 +250,7 @@
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-scm-plugin</artifactId>
 						<configuration>
-							<developerConnectionUrl>${project.scm.developerConnection}/code/trunk/</developerConnectionUrl>
+							<developerConnectionUrl>${project.scm.developerConnection}</developerConnectionUrl>
 							<message>auto-save</message>
 						</configuration>
 						<executions>
