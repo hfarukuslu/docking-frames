@@ -5,7 +5,7 @@
 	<parent>
 		<artifactId>test-archon</artifactId>
 		<groupId>org.dockingframes</groupId>
-		<version>1.0.11</version>
+		<version>1.0.12-SNAPSHOT</version>
 	</parent>
 
 	<artifactId>test-mod-2</artifactId>
