@@ -6,7 +6,6 @@
 		<artifactId>test-archon</artifactId>
 		<groupId>org.dockingframes</groupId>
 		<version>1.0.14-SNAPSHOT</version>
-		<relativePath>../test-archon</relativePath>
 	</parent>
 
 	<artifactId>test-mod-2</artifactId>
