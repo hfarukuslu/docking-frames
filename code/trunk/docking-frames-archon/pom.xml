@@ -172,7 +172,7 @@
 
 			<!-- get updated docking-frames sources form java-forge -->
 
-			<id>checkout-copy-checkin</id>
+			<id>java-forge</id>
 
 			<activation>
 				<file>
