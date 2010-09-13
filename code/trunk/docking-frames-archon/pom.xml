@@ -14,6 +14,20 @@
 	<packaging>pom</packaging>
 	<version>1.0.0-SNAPSHOT</version>
 
+	<modules>
+		<module>docking-frames-base</module>
+		<module>docking-frames-common</module>
+		<module>docking-frames-demo-app</module>
+		<module>docking-frames-demo-app-ice</module>
+		<module>docking-frames-demo-chess</module>
+		<module>docking-frames-demo-help</module>
+		<module>docking-frames-demo-layouts</module>
+		<module>docking-frames-demo-notes</module>
+		<module>docking-frames-demo-paint</module>
+		<module>docking-frames-demo-size-and-color</module>
+		<module>docking-frames-demo-tutorial</module>
+	</modules>
+
 	<name>docking-frames</name>
 
 	<description>docking-frames is an open source Java Swing docking
@@ -457,6 +471,5 @@
 		</plugins>
 
 	</reporting>
-
 
 </project>
