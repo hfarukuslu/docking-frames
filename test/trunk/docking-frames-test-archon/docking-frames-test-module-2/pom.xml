@@ -8,6 +8,6 @@
 		<version>1.0.18-SNAPSHOT</version>
 	</parent>
 
-	<artifactId>test-mod-2</artifactId>
+	<artifactId>docking-frames-test-module-2</artifactId>
 
 </project>
