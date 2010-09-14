@@ -42,7 +42,7 @@
 	<scm>
 		<connection>scm:svn:http://docking-frames.googlecode.com/svn/code/trunk/docking-frames-archon</connection>
 		<developerConnection>scm:svn:https://docking-frames.googlecode.com/svn/code/trunk/docking-frames-archon</developerConnection>
-		<url>http://code.google.com/p/docking-frames/source/browse/#svn/code/trunk/docking-frames-archon</url>
+<!--		<url>http://code.google.com/p/docking-frames/source/browse/#svn/code/trunk/docking-frames-archon</url>-->
 	</scm>
 
 	<licenses>
