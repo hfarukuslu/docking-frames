@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
 	<parent>
 		<artifactId>oss-parent</artifactId>
@@ -10,6 +11,7 @@
 	<groupId>org.dockingframes</groupId>
 	<artifactId>docking-frames-test-archon</artifactId>
 	<packaging>pom</packaging>
+	<name>docking frames: test nested multi-module maven project release</name>
 	<version>1.0.18-SNAPSHOT</version>
 
 	<modules>
@@ -17,10 +19,12 @@
 		<module>docking-frames-test-module-2</module>
 	</modules>
 
+	<description>test nested multi-module maven project release via sonatype oss</description>
+	<url>http://code.google.com/p/docking-frames/source/browse/#svn/test/trunk/docking-frames-test-archon</url>
 	<scm>
-		<connection>scm:svn:https://docking-frames.googlecode.com/svn/test/trunk/test-archon</connection>
-		<developerConnection>scm:svn:https://docking-frames.googlecode.com/svn/test/trunk/test-archon</developerConnection>
-<!--		<url>http://svn.sonatype.org/spice/tags/oss-parent-5/test-archon</url>-->
+		<connection>scm:svn:https://docking-frames.googlecode.com/svn/test/trunk/docking-frames-test-archon</connection>
+		<developerConnection>scm:svn:https://docking-frames.googlecode.com/svn/test/trunk/docking-frames-test-archon</developerConnection>
+		<url>http://code.google.com/p/docking-frames/source/browse/#svn/test/trunk/docking-frames-test-archon</url>
 	</scm>
 
 	<build>
