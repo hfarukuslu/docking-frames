@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
-		<artifactId>test-archon</artifactId>
+		<artifactId>docking-frames-test-archon</artifactId>
 		<groupId>org.dockingframes</groupId>
 		<version>1.0.18-SNAPSHOT</version>
 	</parent>
