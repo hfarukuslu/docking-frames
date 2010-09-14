@@ -5,7 +5,7 @@
 	<parent>
 		<artifactId>docking-frames-test-archon</artifactId>
 		<groupId>org.dockingframes</groupId>
-		<version>1.0.18-SNAPSHOT</version>
+		<version>1.0.18</version>
 	</parent>
 
 	<artifactId>docking-frames-test-module-2</artifactId>
