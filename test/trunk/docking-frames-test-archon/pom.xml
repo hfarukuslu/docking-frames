@@ -8,7 +8,7 @@
 		<version>5</version>
 	</parent>
 
-	<name>docking frames: test nested multi-module maven project release</name>
+	<name>docking frames: test multi-module project</name>
 	<description>test nested multi-module maven project release via sonatype oss</description>
 	<url>http://code.google.com/p/docking-frames/source/browse/#svn/test/trunk/docking-frames-test-archon</url>
 
