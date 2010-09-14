@@ -10,7 +10,7 @@
 	<groupId>org.dockingframes</groupId>
 	<artifactId>docking-frames-test-archon</artifactId>
 	<packaging>pom</packaging>
-	<version>1.0.18-SNAPSHOT</version>
+	<version>1.0.18</version>
 
 	<modules>
 		<module>docking-frames-test-module-1</module>
@@ -18,10 +18,11 @@
 	</modules>
 
 	<scm>
-		<connection>scm:svn:https://docking-frames.googlecode.com/svn/test/trunk/test-archon</connection>
-		<developerConnection>scm:svn:https://docking-frames.googlecode.com/svn/test/trunk/test-archon</developerConnection>
+		<connection>scm:svn:https://docking-frames.googlecode.com/svn/test/tags/docking-frames-test-archon-1.0.18</connection>
+		<developerConnection>scm:svn:https://docking-frames.googlecode.com/svn/test/tags/docking-frames-test-archon-1.0.18</developerConnection>
 <!--		<url>http://svn.sonatype.org/spice/tags/oss-parent-5/test-archon</url>-->
-	</scm>
+	  <url>http://svn.sonatype.org/spice/tags/docking-frames-test-archon-1.0.18</url>
+  </scm>
 
 	<build>
 
