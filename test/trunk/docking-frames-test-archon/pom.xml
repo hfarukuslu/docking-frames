@@ -11,7 +11,7 @@
 	<artifactId>docking-frames-test-archon</artifactId>
 	<packaging>pom</packaging>
 	<name>docking frames: test nested multi-module maven project release</name>
-	<version>1.0.18</version>
+	<version>1.0.19-SNAPSHOT</version>
 
 	<modules>
 		<module>docking-frames-test-module-1</module>
@@ -21,9 +21,9 @@
 	<description>test nested multi-module maven project release via sonatype oss</description>
 	<url>http://code.google.com/p/docking-frames/source/browse/#svn/test/trunk/docking-frames-test-archon</url>
 	<scm>
-		<connection>scm:svn:https://docking-frames.googlecode.com/svn/test/tags/docking-frames-test-archon-1.0.18</connection>
-		<developerConnection>scm:svn:https://docking-frames.googlecode.com/svn/test/tags/docking-frames-test-archon-1.0.18</developerConnection>
-		<url>http://code.google.com/p/docking-frames/source/browse/#svn/test/tags/docking-frames-test-archon-1.0.18</url>
+		<connection>scm:svn:https://docking-frames.googlecode.com/svn/test/trunk/docking-frames-test-archon</connection>
+		<developerConnection>scm:svn:https://docking-frames.googlecode.com/svn/test/trunk/docking-frames-test-archon</developerConnection>
+		<url>http://code.google.com/p/docking-frames/source/browse/#svn/test/trunk/docking-frames-test-archon</url>
 	</scm>
 
 	<build>
