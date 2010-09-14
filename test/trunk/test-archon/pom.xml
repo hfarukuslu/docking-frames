@@ -13,8 +13,8 @@
 	<version>1.0.18-SNAPSHOT</version>
 
 	<modules>
-		<module>test-mod-1</module>
-		<module>test-mod-2</module>
+		<module>docking-frames-test-module-1</module>
+		<module>docking-frames-test-module-2</module>
 	</modules>
 
 	<scm>
