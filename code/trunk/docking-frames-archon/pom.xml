@@ -172,28 +172,28 @@
 
 		<extensions>
 
-			<extension>
-				<groupId>org.apache.maven.wagon</groupId>
-				<artifactId>wagon-http</artifactId>
-			</extension>
+			<!-- <extension> -->
+			<!-- <groupId>org.apache.maven.wagon</groupId> -->
+			<!-- <artifactId>wagon-http</artifactId> -->
+			<!-- </extension> -->
 
-			<extension>
-				<groupId>org.apache.maven.wagon</groupId>
-				<artifactId>wagon-scm</artifactId>
-				<!-- <version>1.0-beta-6</version> -->
-			</extension>
+			<!-- <extension> -->
+			<!-- <groupId>org.apache.maven.wagon</groupId> -->
+			<!-- <artifactId>wagon-scm</artifactId> -->
+			<!-- <version>1.0-beta-6</version> -->
+			<!-- </extension> -->
 
-			<extension>
-				<groupId>org.apache.maven.scm</groupId>
-				<artifactId>maven-scm-manager-plexus</artifactId>
-				<!-- <version>1.4</version> -->
-			</extension>
+			<!-- <extension> -->
+			<!-- <groupId>org.apache.maven.scm</groupId> -->
+			<!-- <artifactId>maven-scm-manager-plexus</artifactId> -->
+			<!-- <version>1.4</version> -->
+			<!-- </extension> -->
 
-			<extension>
-				<groupId>org.apache.maven.scm</groupId>
-				<artifactId>maven-scm-provider-svnexe</artifactId>
-				<!-- <version>1.4</version> -->
-			</extension>
+			<!-- <extension> -->
+			<!-- <groupId>org.apache.maven.scm</groupId> -->
+			<!-- <artifactId>maven-scm-provider-svnexe</artifactId> -->
+			<!-- <version>1.4</version> -->
+			<!-- </extension> -->
 
 		</extensions>
 
@@ -371,18 +371,6 @@
 	<reporting>
 
 		<plugins>
-
-			<!-- <plugin> -->
-			<!-- <groupId>org.codehaus.mojo</groupId> -->
-			<!-- <artifactId>cobertura-maven-plugin</artifactId> -->
-			<!-- <version>2.4</version> -->
-			<!-- <configuration> -->
-			<!-- <formats> -->
-			<!-- <format>xml</format> -->
-			<!-- <format>html</format> -->
-			<!-- </formats> -->
-			<!-- </configuration> -->
-			<!-- </plugin> -->
 
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
