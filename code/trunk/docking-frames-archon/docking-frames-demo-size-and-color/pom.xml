@@ -12,7 +12,8 @@
 	<artifactId>docking-frames-demo-size-and-color</artifactId>
 	<packaging>jar</packaging>
 
-	<name>docking frames: demonstration of frame sizes and colors</name>
+	<name>${project.artifactId}</name>
+	<description>${project.name} is a demonstration of various frame sizes and color styles</description>
 	<dependencies>
 		<dependency>
 			<groupId>org.dockingframes</groupId>

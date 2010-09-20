@@ -12,7 +12,8 @@
 	<artifactId>docking-frames-base</artifactId>
 	<packaging>jar</packaging>
 
-	<name>docking frames: base or core library</name>
+	<name>${project.artifactId}</name>
+	<description>${project.name} is base or core library</description>
 	<properties>
 		<repo-module>dockingFrames</repo-module>
 	</properties>

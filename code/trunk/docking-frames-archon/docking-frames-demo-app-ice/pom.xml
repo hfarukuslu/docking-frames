@@ -12,7 +12,8 @@
 	<artifactId>docking-frames-demo-app-ice</artifactId>
 	<packaging>jar</packaging>
 
-	<name>docking frames: demonstration aplication glue interface</name>
+	<name>${project.artifactId}</name>
+	<description>${project.name} is a glue interface for demonstration aplication modules</description>
 	<dependencies>
 		<dependency>
 			<groupId>org.dockingframes</groupId>

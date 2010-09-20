@@ -12,7 +12,8 @@
 	<artifactId>docking-frames-demo-paint</artifactId>
 	<packaging>jar</packaging>
 
-	<name>docking frames: demonstration drawing program</name>
+	<name>${project.artifactId}</name>
+	<description>${project.name} is a demonstration of a drawing program</description>
 	<dependencies>
 		<dependency>
 			<groupId>org.dockingframes</groupId>

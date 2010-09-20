@@ -12,7 +12,8 @@
 	<artifactId>docking-frames-demo-tutorial</artifactId>
 	<packaging>jar</packaging>
 
-	<name>docking frames: enry-level tutorial</name>
+	<name>${project.artifactId}</name>
+	<description>${project.name} is an enry-level tutorial for docking-frames</description>
 	<dependencies>
 		<dependency>
 			<groupId>org.dockingframes</groupId>

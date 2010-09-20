@@ -12,7 +12,8 @@
 	<artifactId>docking-frames-common</artifactId>
 	<packaging>jar</packaging>
 
-	<name>docking frames: higher-level framework</name>
+	<name>${project.artifactId}</name>
+	<description>${project.name} is a user-level framework for docking-frames</description>
 	<dependencies>
 		<dependency>
 			<groupId>org.dockingframes</groupId>

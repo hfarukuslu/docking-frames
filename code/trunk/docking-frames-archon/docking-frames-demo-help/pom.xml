@@ -11,7 +11,8 @@
 	<artifactId>docking-frames-demo-help</artifactId>
 	<packaging>jar</packaging>
 
-	<name>docking frames: demonstration of help gui</name>
+	<name>${project.artifactId}</name>
+	<description>${project.name} is a demonstration of help (javadoc) gui</description>
 	<dependencies>
 		<dependency>
 			<groupId>org.dockingframes</groupId>

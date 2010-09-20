@@ -28,11 +28,10 @@
 		<module>docking-frames-demo-tutorial</module>
 	</modules>
 
-	<name>docking frames: configuration parent</name>
+	<name>${project.artifactId}</name>
 
-	<description>docking-frames is an open source Java Swing docking
-		framework, licenced under LGPL 2.1</description>
 
+	<description>${project.name} is configuration parent for all docking-frames modules</description>
 	<url>http://code.google.com/p/docking-frames/</url>
 
 	<organization>
