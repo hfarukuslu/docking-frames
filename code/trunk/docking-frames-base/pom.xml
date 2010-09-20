@@ -15,8 +15,8 @@
 	<version>1.0.8-SNAPSHOT</version>
 
 	<modules>
-		<module>docking-frames-base</module>
 		<module>docking-frames-common</module>
+		<module>docking-frames-framework</module>
 		<module>docking-frames-demo-app</module>
 		<module>docking-frames-demo-app-ice</module>
 		<module>docking-frames-demo-chess</module>
@@ -249,110 +249,6 @@
 
 		<plugins>
 
-			<!-- download java forge -->
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-scm-plugin</artifactId>
-				<configuration>
-					<connectionUrl>${repo-connection}/${repo-module}</connectionUrl>
-					<checkoutDirectory>${repodir}</checkoutDirectory>
-				</configuration>
-				<executions>
-					<execution>
-						<id>checkout-java-forge</id>
-						<phase>generate-sources</phase>
-						<goals>
-							<goal>checkout</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-
-
-			<!-- download java forge -->
-			<!-- <plugin> -->
-			<!-- <groupId>org.codehaus.mojo</groupId> -->
-			<!-- <artifactId>wagon-maven-plugin</artifactId> -->
-			<!-- <executions> -->
-			<!-- <execution> -->
-			<!-- <id>download-java-forge</id> -->
-			<!-- <phase>generate-sources</phase> -->
-			<!-- <goals> -->
-			<!-- <goal>list</goal> -->
-			<!-- </goals> -->
-			<!-- <configuration> -->
-			<!-- <skip>false</skip> -->
-			<!-- <serverId>java-forge</serverId> -->
-			<!-- <url>${repo-connection}</url> -->
-			<!-- <fromDir>${repo-module}</fromDir> -->
-			<!-- <toDir>${repodir}</toDir> -->
-			<!-- <includes>*</includes> -->
-			<!-- </configuration> -->
-			<!-- </execution> -->
-			<!-- </executions> -->
-			<!-- </plugin> -->
-
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-resources-plugin</artifactId>
-				<configuration>
-					<encoding>UTF-8</encoding>
-				</configuration>
-				<executions>
-					<execution>
-						<id>copy-src-main-java</id>
-						<phase>process-sources</phase>
-						<goals>
-							<goal>copy-resources</goal>
-						</goals>
-						<configuration>
-							<overwrite>true</overwrite>
-							<resources>
-								<resource>
-									<directory>${repodir}/${module-src-main-java}</directory>
-									<filtering>false</filtering>
-								</resource>
-							</resources>
-							<outputDirectory>${basedir}/src/main/java</outputDirectory>
-						</configuration>
-					</execution>
-					<execution>
-						<id>copy-src-test-java</id>
-						<phase>process-sources</phase>
-						<goals>
-							<goal>copy-resources</goal>
-						</goals>
-						<configuration>
-							<overwrite>true</overwrite>
-							<resources>
-								<resource>
-									<directory>${repodir}/${module-src-test-java}</directory>
-									<filtering>false</filtering>
-								</resource>
-							</resources>
-							<outputDirectory>${basedir}/src/test/java</outputDirectory>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
-
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-scm-plugin</artifactId>
-				<configuration>
-					<developerConnectionUrl>${project.scm.developerConnection}</developerConnectionUrl>
-					<message>auto-save</message>
-				</configuration>
-				<executions>
-					<execution>
-						<id>checkin-google-code</id>
-						<phase>package</phase>
-						<goals>
-							<goal>checkin</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
 
 
 			<plugin>
@@ -367,6 +263,129 @@
 		</plugins>
 
 	</build>
+
+	<profiles>
+
+		<profile>
+
+			<id>download-from-java-forge</id>
+
+			<build>
+
+				<plugins>
+
+					<!-- download java forge -->
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-scm-plugin</artifactId>
+						<configuration>
+							<connectionUrl>${repo-connection}/${repo-module}</connectionUrl>
+							<checkoutDirectory>${repodir}</checkoutDirectory>
+						</configuration>
+						<executions>
+							<execution>
+								<id>checkout-java-forge</id>
+								<phase>generate-sources</phase>
+								<goals>
+									<goal>checkout</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+
+
+					<!-- download java forge -->
+					<!-- <plugin> -->
+					<!-- <groupId>org.codehaus.mojo</groupId> -->
+					<!-- <artifactId>wagon-maven-plugin</artifactId> -->
+					<!-- <executions> -->
+					<!-- <execution> -->
+					<!-- <id>download-java-forge</id> -->
+					<!-- <phase>generate-sources</phase> -->
+					<!-- <goals> -->
+					<!-- <goal>list</goal> -->
+					<!-- </goals> -->
+					<!-- <configuration> -->
+					<!-- <skip>false</skip> -->
+					<!-- <serverId>java-forge</serverId> -->
+					<!-- <url>${repo-connection}</url> -->
+					<!-- <fromDir>${repo-module}</fromDir> -->
+					<!-- <toDir>${repodir}</toDir> -->
+					<!-- <includes>*</includes> -->
+					<!-- </configuration> -->
+					<!-- </execution> -->
+					<!-- </executions> -->
+					<!-- </plugin> -->
+
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-resources-plugin</artifactId>
+						<configuration>
+							<encoding>UTF-8</encoding>
+						</configuration>
+						<executions>
+							<execution>
+								<id>copy-src-main-java</id>
+								<phase>process-sources</phase>
+								<goals>
+									<goal>copy-resources</goal>
+								</goals>
+								<configuration>
+									<overwrite>true</overwrite>
+									<resources>
+										<resource>
+											<directory>${repodir}/${module-src-main-java}</directory>
+											<filtering>false</filtering>
+										</resource>
+									</resources>
+									<outputDirectory>${basedir}/src/main/java</outputDirectory>
+								</configuration>
+							</execution>
+							<execution>
+								<id>copy-src-test-java</id>
+								<phase>process-sources</phase>
+								<goals>
+									<goal>copy-resources</goal>
+								</goals>
+								<configuration>
+									<overwrite>true</overwrite>
+									<resources>
+										<resource>
+											<directory>${repodir}/${module-src-test-java}</directory>
+											<filtering>false</filtering>
+										</resource>
+									</resources>
+									<outputDirectory>${basedir}/src/test/java</outputDirectory>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-scm-plugin</artifactId>
+						<configuration>
+							<developerConnectionUrl>${project.scm.developerConnection}</developerConnectionUrl>
+							<message>auto-save</message>
+						</configuration>
+						<executions>
+							<execution>
+								<id>checkin-google-code</id>
+								<phase>package</phase>
+								<goals>
+									<goal>checkin</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+
+				</plugins>
+
+			</build>
+
+		</profile>
+
+	</profiles>
 
 	<reporting>
 
