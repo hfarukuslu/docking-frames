@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <launchConfiguration type="org.maven.ide.eclipse.Maven2LaunchConfigurationType">
 <booleanAttribute key="M2_DEBUG_OUTPUT" value="false"/>
-<stringAttribute key="M2_GOALS" value="package"/>
+<stringAttribute key="M2_GOALS" value="deploy"/>
 <booleanAttribute key="M2_NON_RECURSIVE" value="false"/>
 <booleanAttribute key="M2_OFFLINE" value="false"/>
 <stringAttribute key="M2_PROFILES" value=""/>
@@ -12,5 +12,5 @@
 <booleanAttribute key="M2_WORKSPACE_RESOLUTION" value="true"/>
 <stringAttribute key="bad_container_name" value="/docking-frames-base/d/launch"/>
 <stringAttribute key="org.eclipse.jdt.launching.VM_ARGUMENTS" value="${env_var:MAVEN_OPTS}"/>
-<stringAttribute key="org.eclipse.jdt.launching.WORKING_DIRECTORY" value="${workspace_loc:/docking-frames-base}"/>
+<stringAttribute key="org.eclipse.jdt.launching.WORKING_DIRECTORY" value="${workspace_loc:/docking-frames-archon}"/>
 </launchConfiguration>
