@@ -9,7 +9,7 @@
 		<version>1.0.8-SNAPSHOT</version>
 	</parent>
 
-	<artifactId>docking-frames-base</artifactId>
+	<artifactId>docking-frames-core</artifactId>
 	<packaging>jar</packaging>
 
 	<name>${project.artifactId}</name>
