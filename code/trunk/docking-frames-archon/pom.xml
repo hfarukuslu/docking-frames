@@ -15,7 +15,7 @@
 	<version>1.0.8-SNAPSHOT</version>
 
 	<modules>
-		<module>docking-frames-base</module>
+		<module>docking-frames-core</module>
 		<module>docking-frames-common</module>
 		<module>docking-frames-demo-app</module>
 		<module>docking-frames-demo-app-ice</module>
