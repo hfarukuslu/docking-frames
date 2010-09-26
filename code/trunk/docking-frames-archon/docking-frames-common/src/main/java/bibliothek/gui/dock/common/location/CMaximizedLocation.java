@@ -28,14 +28,32 @@ package bibliothek.gui.dock.common.location;
 import bibliothek.gui.dock.common.CLocation;
 import bibliothek.gui.dock.common.mode.ExtendedMode;
 import bibliothek.gui.dock.layout.DockableProperty;
+import bibliothek.gui.dock.station.split.SplitDockFullScreenProperty;
 
 /**
- * A location representing the maximized state. This location does not
- * support a root-station, the location of a maximized element depends
- * on its location before maximization.
+ * A location representing the maximized state. If no root-station is set,
+ * then, the location of a maximized element depends on its location before
+ * maximization.
  * @author Benjamin Sigg
  */
-public class CMaximizedLocation extends CLocation {
+public class CMaximizedLocation extends AbstractStackholdingLocation {
+	private String root;
+	
+	/**
+	 * Creates a new location
+	 */
+	public CMaximizedLocation(){
+		// ignore
+	}
+	
+	/**
+	 * Creates a new location.
+	 * @param root the station which represents the maximize area, can be <code>null</code>
+	 */
+	public CMaximizedLocation( String root ){
+		this.root = root;
+	}
+	
 	@Override
 	public ExtendedMode findMode(){
 		return ExtendedMode.MAXIMIZED;
@@ -43,26 +61,26 @@ public class CMaximizedLocation extends CLocation {
 
 	@Override
 	public DockableProperty findProperty( DockableProperty successor ){
-		return null;
+		if( successor == null ){
+			return null;
+		}
+		SplitDockFullScreenProperty property = new SplitDockFullScreenProperty();
+		property.setSuccessor( successor );
+		return property;
 	}
 	
-	@Override
-	public CLocation expandProperty( DockableProperty property ) {
-	    return null;
-	}
-
 	@Override
 	public String findRoot(){
-		return null;
-	}
-	
-	@Override
-	public CLocation aside() {
-	    return this;
+		return root;
 	}
 	
 	@Override
     public String toString() {
         return "[maximized]";
     }
+
+	@Override
+	public CLocation aside(){
+		return stack( 1 );
+	}
 }
