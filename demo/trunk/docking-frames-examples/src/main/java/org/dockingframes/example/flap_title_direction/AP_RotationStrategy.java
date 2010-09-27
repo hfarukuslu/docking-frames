@@ -29,6 +29,7 @@ public class AP_RotationStrategy implements OrientationToRotationStrategy,
 		Dockable dockable = title.getDockable();
 
 		if (dockable.getDockParent() instanceof FlapDockStation) {
+
 			if (title.getOrigin() != null
 					&& title.getOrigin().getID()
 							.equals(FlapDockStation.BUTTON_TITLE_ID)) {
@@ -38,6 +39,7 @@ public class AP_RotationStrategy implements OrientationToRotationStrategy,
 					return Rotation.DEGREE_270;
 				}
 			}
+
 		}
 
 		if (orientation.isHorizontal()) {

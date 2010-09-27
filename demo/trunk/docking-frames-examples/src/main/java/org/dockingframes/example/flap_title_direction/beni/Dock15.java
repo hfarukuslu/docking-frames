@@ -39,33 +39,24 @@ import bibliothek.gui.dock.util.swing.Rotation;
  * 
  * */
 public class Dock15 {
-
 	public static DefaultMultipleCDockable createDockable(
-
 			MultipleCDockableFactory<MultipleCDockable, MultipleCDockableLayout> factory,
 			String title, Color color) {
-
 		JPanel panel = new JPanel();
 		panel.setOpaque(true);
 		panel.setBackground(color);
-
 		final DefaultMultipleCDockable dockable = new DefaultMultipleCDockable(
 				factory, title, panel);
-
 		dockable.setTitleIcon(new RectIcon());
 
 		return dockable;
 	}
 
 	public static void main(String[] args) {
-
 		SwingUtilities.invokeLater(new Runnable() {
-
 			@Override
 			public void run() {
-
 				JFrame frame = new JFrame("Demo");
-
 				CControl control = new CControl(frame);
 
 				control.putProperty(DockTitle.ORIENTATION_STRATEGY,
@@ -88,18 +79,14 @@ public class Dock15 {
 				control.addMultipleDockableFactory("color", factory);
 
 				grid = new CGrid(control);
-
 				grid.add(0, 0, 1, 1,
 						createDockable(factory, "Yellow", Color.YELLOW));
-
 				grid.add(0, 1, 1, 1, createDockable(factory, "Red", Color.RED));
-
 				control.getContentArea().deploy(grid);
 
 				frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 				frame.setBounds(20, 20, 400, 400);
 				frame.setVisible(true);
-
 			}
 		});
 	}
@@ -124,15 +111,12 @@ public class Dock15 {
 
 	private static class RotationStrategy implements
 			OrientationToRotationStrategy, DockHierarchyListener {
-
 		private final Set<DockTitle> titles = new HashSet<DockTitle>();
 		private final List<OrientationToRotationStrategyListener> listeners = new ArrayList<OrientationToRotationStrategyListener>();
 
 		@Override
 		public Rotation convert(Orientation orientation, DockTitle title) {
-
 			Dockable dockable = title.getDockable();
-
 			if (dockable.getDockParent() instanceof FlapDockStation) {
 				if (title.getOrigin() != null
 						&& title.getOrigin().getID()
@@ -199,7 +183,5 @@ public class Dock15 {
 				OrientationToRotationStrategyListener listener) {
 			listeners.remove(listener);
 		}
-
 	}
-
 }
