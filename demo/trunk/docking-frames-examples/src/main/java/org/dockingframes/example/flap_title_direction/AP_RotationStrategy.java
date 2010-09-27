@@ -5,12 +5,15 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import bibliothek.gui.DockStation;
 import bibliothek.gui.Dockable;
 import bibliothek.gui.dock.FlapDockStation;
+import bibliothek.gui.dock.FlapDockStation.Direction;
 import bibliothek.gui.dock.event.DockHierarchyEvent;
 import bibliothek.gui.dock.event.DockHierarchyListener;
 import bibliothek.gui.dock.title.DockTitle;
 import bibliothek.gui.dock.title.DockTitle.Orientation;
+import bibliothek.gui.dock.title.DockTitleVersion;
 import bibliothek.gui.dock.title.OrientationToRotationStrategy;
 import bibliothek.gui.dock.title.OrientationToRotationStrategyListener;
 import bibliothek.gui.dock.util.swing.Rotation;
@@ -28,16 +31,37 @@ public class AP_RotationStrategy implements OrientationToRotationStrategy,
 
 		Dockable dockable = title.getDockable();
 
-		if (dockable.getDockParent() instanceof FlapDockStation) {
+		DockStation station = dockable.getDockParent();
 
-			if (title.getOrigin() != null
-					&& title.getOrigin().getID()
-							.equals(FlapDockStation.BUTTON_TITLE_ID)) {
-				if (orientation.isHorizontal()) {
-					return Rotation.DEGREE_180;
-				} else {
-					return Rotation.DEGREE_270;
+		if (station instanceof FlapDockStation) {
+
+			FlapDockStation flap = (FlapDockStation) station;
+
+			Direction direction = flap.getDirection();
+
+			DockTitleVersion origin = title.getOrigin();
+
+			if (origin != null
+					&& origin.getID().equals(FlapDockStation.BUTTON_TITLE_ID)) {
+
+				switch (direction) {
+
+				case NORTH:
+				case SOUTH:
+					break;
+
+				case EAST:
+					if (orientation.isVertical()) {
+						return Rotation.DEGREE_270;
+					}
+				case WEST:
+					if (orientation.isVertical()) {
+						return Rotation.DEGREE_90;
+					}
 				}
+
+				return Rotation.DEGREE_0;
+
 			}
 
 		}

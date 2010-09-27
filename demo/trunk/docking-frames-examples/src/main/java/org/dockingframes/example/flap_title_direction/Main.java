@@ -12,6 +12,7 @@ import bibliothek.gui.dock.common.CGrid;
 import bibliothek.gui.dock.common.DefaultSingleCDockable;
 import bibliothek.gui.dock.common.intern.CControlFactory;
 import bibliothek.gui.dock.common.layout.FullLockConflictResolver;
+import bibliothek.gui.dock.title.DockTitle;
 
 public class Main {
 
@@ -29,6 +30,9 @@ public class Main {
 
 		control.putProperty(CControl.RESIZE_LOCK_CONFLICT_RESOLVER,
 				new FullLockConflictResolver());
+
+		control.putProperty(DockTitle.ORIENTATION_STRATEGY,
+				new AP_RotationStrategy());
 
 		frame.setLayout(new GridLayout(1, 1));
 

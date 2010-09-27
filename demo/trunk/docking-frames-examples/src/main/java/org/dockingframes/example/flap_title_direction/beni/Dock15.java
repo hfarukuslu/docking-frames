@@ -56,7 +56,9 @@ public class Dock15 {
 		SwingUtilities.invokeLater(new Runnable() {
 			@Override
 			public void run() {
+
 				JFrame frame = new JFrame("Demo");
+
 				CControl control = new CControl(frame);
 
 				control.putProperty(DockTitle.ORIENTATION_STRATEGY,
