@@ -248,8 +248,6 @@
 
 		<plugins>
 
-
-
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
@@ -268,6 +266,8 @@
 		<profile>
 
 			<id>update-from-java-forge</id>
+
+			<!-- TODO http://code.google.com/p/maven-scm-provider-svnjava/wiki/Usage -->
 
 			<build>
 
@@ -360,20 +360,36 @@
 						</executions>
 					</plugin>
 
+					<!-- upload google code -->
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-scm-plugin</artifactId>
+						<artifactId>	</artifactId>
 						<configuration>
 							<developerConnectionUrl>${project.scm.developerConnection}</developerConnectionUrl>
-							<message>auto-save</message>
+							<detail>true</detail>
 						</configuration>
 						<executions>
+							<!-- TODO -->
+							<!-- <execution> -->
+							<!-- <id>add-google-code</id> -->
+							<!-- <phase>package</phase> -->
+							<!-- <goals> -->
+							<!-- <goal>add</goal> -->
+							<!-- </goals> -->
+							<!-- <configuration> -->
+							<!-- <message></message> -->
+							<!-- <includes>**</includes> -->
+							<!-- </configuration> -->
+							<!-- </execution> -->
 							<execution>
 								<id>checkin-google-code</id>
 								<phase>package</phase>
 								<goals>
 									<goal>checkin</goal>
 								</goals>
+								<configuration>
+									<message>build-auto-checkin</message>
+								</configuration>
 							</execution>
 						</executions>
 					</plugin>
