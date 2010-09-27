@@ -1,4 +1,4 @@
-package org.dockingframes.example.flap_title_direction;
+package org.dockingframes.example.flap_title_direction.beni;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -32,6 +32,12 @@ import bibliothek.gui.dock.title.OrientationToRotationStrategy;
 import bibliothek.gui.dock.title.OrientationToRotationStrategyListener;
 import bibliothek.gui.dock.util.swing.Rotation;
 
+/**
+ * example by Beni:
+ * 
+ * http://forum.byte-welt.net/showthread.php?t=3038
+ * 
+ * */
 public class Dock15 {
 
 	public static DefaultMultipleCDockable createDockable(
@@ -82,14 +88,18 @@ public class Dock15 {
 				control.addMultipleDockableFactory("color", factory);
 
 				grid = new CGrid(control);
+
 				grid.add(0, 0, 1, 1,
 						createDockable(factory, "Yellow", Color.YELLOW));
+
 				grid.add(0, 1, 1, 1, createDockable(factory, "Red", Color.RED));
+
 				control.getContentArea().deploy(grid);
 
 				frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 				frame.setBounds(20, 20, 400, 400);
 				frame.setVisible(true);
+
 			}
 		});
 	}
@@ -114,12 +124,15 @@ public class Dock15 {
 
 	private static class RotationStrategy implements
 			OrientationToRotationStrategy, DockHierarchyListener {
+
 		private final Set<DockTitle> titles = new HashSet<DockTitle>();
 		private final List<OrientationToRotationStrategyListener> listeners = new ArrayList<OrientationToRotationStrategyListener>();
 
 		@Override
 		public Rotation convert(Orientation orientation, DockTitle title) {
+
 			Dockable dockable = title.getDockable();
+
 			if (dockable.getDockParent() instanceof FlapDockStation) {
 				if (title.getOrigin() != null
 						&& title.getOrigin().getID()
@@ -186,5 +199,7 @@ public class Dock15 {
 				OrientationToRotationStrategyListener listener) {
 			listeners.remove(listener);
 		}
+
 	}
+
 }
