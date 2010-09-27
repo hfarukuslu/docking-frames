@@ -31,7 +31,8 @@
 	<name>${project.artifactId}</name>
 
 
-	<description>${project.name} is configuration parent for all docking-frames modules</description>
+	<description>${project.name} is configuration parent for all
+		docking-frames modules</description>
 	<url>http://code.google.com/p/docking-frames/</url>
 
 	<organization>
@@ -257,6 +258,37 @@
 				</configuration>
 			</plugin>
 
+			<!-- copy resources from source tree -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-resources-plugin</artifactId>
+				<configuration>
+					<encoding>UTF-8</encoding>
+				</configuration>
+				<executions>
+					<execution>
+						<id>copy-src-main-java-data</id>
+						<phase>process-resources</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<overwrite>true</overwrite>
+							<resources>
+								<resource>
+									<directory>${project.build.sourceDirectory}</directory>
+									<filtering>false</filtering>
+									<excludes>
+										<exclude>**/*.java</exclude>
+									</excludes>
+								</resource>
+							</resources>
+							<outputDirectory>${project.build.outputDirectory}</outputDirectory>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
 		</plugins>
 
 	</build>
@@ -363,10 +395,9 @@
 					<!-- upload google code -->
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>	</artifactId>
+						<artifactId>maven-scm-plugin</artifactId>
 						<configuration>
 							<developerConnectionUrl>${project.scm.developerConnection}</developerConnectionUrl>
-							<detail>true</detail>
 						</configuration>
 						<executions>
 							<!-- TODO -->
