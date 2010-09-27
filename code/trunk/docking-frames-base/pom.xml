@@ -159,7 +159,7 @@
 
 		<repo-url>http://svn.javaforge.com/svn/DockingFrames/trunk</repo-url>
 		<repo-connection>scm:svn:${repo-url}</repo-connection>
-		<repo-module>demonstration_interface</repo-module>
+		<repo-module>/</repo-module>
 		<repodir>${project.build.directory}/checkout-java-forge</repodir>
 
 		<module-src-main-java>src</module-src-main-java>
