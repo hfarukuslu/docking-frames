@@ -15,8 +15,12 @@ public class AP_BoundaryRestriction implements BoundaryRestriction {
 	static private final Logger log = LoggerFactory
 			.getLogger(AP_BoundaryRestriction.class);
 
-	private final Rectangle left;
-	private final Rectangle right;
+	private final Rectangle parkLeft;
+	private final Rectangle parkRight;
+
+	private Rectangle parkCurrent;
+
+	private final int ratioWidth = 6;
 
 	public AP_BoundaryRestriction() {
 
@@ -24,10 +28,14 @@ public class AP_BoundaryRestriction implements BoundaryRestriction {
 
 		log.info("screen : {}", screen);
 
-		left = new Rectangle(0, 0, screen.width / 6, screen.height);
+		parkLeft = new Rectangle(0, 0, screen.width / ratioWidth, screen.height);
 
-		right = new Rectangle(screen.width - screen.width / 6, 0,
-				screen.width / 6, screen.height);
+		log.info("left : {}", parkLeft);
+
+		parkRight = new Rectangle(screen.width - screen.width / ratioWidth, 0,
+				screen.width / ratioWidth, screen.height);
+
+		log.info("right : {}", parkRight);
 
 	}
 
@@ -38,41 +46,45 @@ public class AP_BoundaryRestriction implements BoundaryRestriction {
 
 		Rectangle bounds = window.getWindowBounds();
 
-		int overLeft = areaOverlap(left, bounds);
-		int overRight = areaOverlap(right, bounds);
+		int overLeft = areaOverlap(parkLeft, bounds);
+		int overRight = areaOverlap(parkRight, bounds);
 
-		if (overLeft > overRight) {
-			return left;
+		if (overLeft >= overRight) {
+			parkCurrent = parkLeft;
 		} else {
-			return right;
+			parkCurrent = parkRight;
 		}
+
+		return parkCurrent;
 
 	}
 
 	@Override
 	public Rectangle check(ScreenDockWindow window, Rectangle target) {
 
-		log.info("check 2; window : {}", window.getWindowBounds());
-		log.info("check 2; target : {}", target);
+		// log.info("check 2; window : {}", window.getWindowBounds());
+		// log.info("check 2; target : {}", target);
 
-		int overLeft = areaOverlap(left, target);
-		int overRight = areaOverlap(right, target);
+		int overLeft = areaOverlap(parkLeft, target);
+		int overRight = areaOverlap(parkRight, target);
 
-		log.info("check 2; left: {} right: {}", overLeft, overRight);
+		// log.info("check 2; left: {} right: {}", overLeft, overRight);
 
 		if (overLeft > overRight) {
-			return left;
-		} else {
-			return right;
+			parkCurrent = parkLeft;
 		}
+
+		if (overLeft < overRight) {
+			parkCurrent = parkRight;
+		}
+
+		return parkCurrent;
 
 	}
 
 	private int areaOverlap(Rectangle a, Rectangle b) {
 
 		if (a.intersects(b)) {
-
-			log.info("### YES ###");
 
 			Rectangle overlap = new Rectangle();
 
