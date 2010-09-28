@@ -33,41 +33,50 @@ public class AP_ScreenDockDialog extends ScreenDockDialog {
 
 	private final MouseInputListener listener = new MouseInputAdapter() {
 
-		private Point press;
+		private Point pressPoint;
 
-		private Rectangle bounds;
+		private Rectangle currentBounds;
 
 		@Override
 		public void mousePressed(MouseEvent e) {
 
-			bounds = new Rectangle(getWindowBounds());
-			press = new Point(e.getPoint());
+			currentBounds = new Rectangle(getWindowBounds());
+			pressPoint = new Point(e.getPoint());
 
-			SwingUtilities.convertPointToScreen(press, e.getComponent());
+			SwingUtilities.convertPointToScreen(pressPoint, e.getComponent());
 
-			log.debug("press : {}", press);
+			log.debug("press : {}", pressPoint);
 
 		}
 
 		@Override
 		public void mouseDragged(MouseEvent e) {
 
-			Point dragg = new Point(e.getPoint());
+			Point draggPoint = new Point(e.getPoint());
 
-			SwingUtilities.convertPointToScreen(dragg, e.getComponent());
+			SwingUtilities.convertPointToScreen(draggPoint, e.getComponent());
 
-			Rectangle bounds = new Rectangle(this.bounds);
+			Rectangle draggBounds = new Rectangle(currentBounds);
 
-			log.debug("dragg : {}", dragg);
+			// log.debug("dragg : {}", draggPoint);
 
-			int dx = dragg.x - press.x;
-			int dy = dragg.y - press.y;
+			int dx = draggPoint.x - pressPoint.x;
+			int dy = draggPoint.y - pressPoint.y;
 
-			bounds.x += dx;
-			bounds.y += dy;
+			draggBounds.x += dx;
+			draggBounds.y += dy;
 
-			// fires restriction.check()
-			setWindowBounds(bounds);
+			//
+			Rectangle updatedBounds = getStation().getBoundaryRestriction()
+					.check(AP_ScreenDockDialog.this, draggBounds);
+
+			if (currentBounds.x == updatedBounds.x) {
+				// do not re-validate
+				return;
+			}
+
+			// fire re-validate;
+			setWindowBounds(draggBounds);
 
 		}
 
