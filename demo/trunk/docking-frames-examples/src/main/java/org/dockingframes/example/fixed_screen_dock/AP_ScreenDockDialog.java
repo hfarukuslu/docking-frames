@@ -33,41 +33,41 @@ public class AP_ScreenDockDialog extends ScreenDockDialog {
 
 	private final MouseInputListener listener = new MouseInputAdapter() {
 
+		private Point press;
+
 		private Rectangle bounds;
-		private Point start;
 
 		@Override
 		public void mousePressed(MouseEvent e) {
 
-			log.debug("press");
+			bounds = new Rectangle(getWindowBounds());
+			press = new Point(e.getPoint());
 
-			bounds = getWindowBounds();
+			SwingUtilities.convertPointToScreen(press, e.getComponent());
 
-			start = e.getPoint();
+			log.debug("press : {}", press);
 
 		}
 
 		@Override
 		public void mouseDragged(MouseEvent e) {
 
-			log.debug("drag");
+			Point dragg = new Point(e.getPoint());
 
-			Point point = e.getPoint();
-
-			SwingUtilities.convertPointToScreen(point, e.getComponent());
+			SwingUtilities.convertPointToScreen(dragg, e.getComponent());
 
 			Rectangle bounds = new Rectangle(this.bounds);
 
-			int dx = point.x - start.x;
-			int dy = point.y - start.y;
+			log.debug("dragg : {}", dragg);
+
+			int dx = dragg.x - press.x;
+			int dy = dragg.y - press.y;
 
 			bounds.x += dx;
 			bounds.y += dy;
 
+			// fires restriction.check()
 			setWindowBounds(bounds);
-
-			invalidate();
-			validate();
 
 		}
 

@@ -38,7 +38,10 @@ public class AP_BoundaryRestriction implements BoundaryRestriction {
 
 		Rectangle bounds = window.getWindowBounds();
 
-		if (areaOverlap(left, bounds) > areaOverlap(right, bounds)) {
+		int overLeft = areaOverlap(left, bounds);
+		int overRight = areaOverlap(right, bounds);
+
+		if (overLeft > overRight) {
 			return left;
 		} else {
 			return right;
@@ -49,7 +52,7 @@ public class AP_BoundaryRestriction implements BoundaryRestriction {
 	@Override
 	public Rectangle check(ScreenDockWindow window, Rectangle target) {
 
-		log.info("check 2; window : {}", window);
+		log.info("check 2; window : {}", window.getWindowBounds());
 		log.info("check 2; target : {}", target);
 
 		int overLeft = areaOverlap(left, target);
@@ -69,11 +72,13 @@ public class AP_BoundaryRestriction implements BoundaryRestriction {
 
 		if (a.intersects(b)) {
 
-			Rectangle dest = new Rectangle();
+			log.info("### YES ###");
 
-			Rectangle.intersect(a, b, dest);
+			Rectangle overlap = new Rectangle();
 
-			return dest.width * dest.height;
+			Rectangle.intersect(a, b, overlap);
+
+			return overlap.width * overlap.height;
 
 		}
 
