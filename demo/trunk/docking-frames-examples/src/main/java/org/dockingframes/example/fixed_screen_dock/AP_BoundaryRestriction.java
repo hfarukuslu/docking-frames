@@ -22,6 +22,8 @@ public class AP_BoundaryRestriction implements BoundaryRestriction {
 
 		Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
 
+		log.info("screen : {}", screen);
+
 		left = new Rectangle(0, 0, screen.width / 6, screen.height);
 
 		right = new Rectangle(screen.width - screen.width / 6, 0,
