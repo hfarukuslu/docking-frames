@@ -17,7 +17,6 @@ import bibliothek.gui.dock.common.CGrid;
 import bibliothek.gui.dock.common.CGridArea;
 import bibliothek.gui.dock.common.CStation;
 import bibliothek.gui.dock.common.DefaultSingleCDockable;
-import bibliothek.gui.dock.common.intern.CControlFactory;
 import bibliothek.gui.dock.common.layout.FullLockConflictResolver;
 
 public class Main {
@@ -33,16 +32,20 @@ public class Main {
 
 		//
 
-		CControlFactory factory = new AP_EfficientControlFactory();
+		// CControlFactory factory = new AP_EfficientControlFactory();
+		// CControl control = new CControl(frame, factory);
+		CControl control = new CControl(frame);
 
-		CControl control = new CControl(frame, factory);
 		frame.add(control.getContentArea());
 
-		control.putProperty(CControl.RESIZE_LOCK_CONFLICT_RESOLVER,
-				new FullLockConflictResolver());
+		control.putProperty(ScreenDockStation.WINDOW_FACTORY,
+				new AP_ScreenDockWindowFactory());
 
 		control.putProperty(ScreenDockStation.BOUNDARY_RESTRICTION,
 				new AP_BoundaryRestriction());
+
+		control.putProperty(CControl.RESIZE_LOCK_CONFLICT_RESOLVER,
+				new FullLockConflictResolver());
 
 		CStation<ScreenDockStation> screenCommon = (CStation<ScreenDockStation>) control
 				.getStation(CControl.EXTERNALIZED_STATION_ID);
