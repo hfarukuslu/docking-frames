@@ -27,7 +27,8 @@ import bibliothek.gui.dock.common.layout.FullLockConflictResolver;
  * */
 public class Main_3036_2 {
 
-	static private final Logger log = LoggerFactory.getLogger(Main_3036_2.class);
+	static private final Logger log = LoggerFactory
+			.getLogger(Main_3036_2.class);
 
 	public static void main(String[] args) {
 
@@ -53,8 +54,9 @@ public class Main_3036_2 {
 		CGridArea gridOne = new AP_GridArea(control, "grid one");
 		CGridArea gridTwo = new AP_GridArea(control, "grid two");
 
-		control.add(gridOne);
-		control.add(gridTwo);
+		// must mark as root
+		control.add(gridOne, true);
+		control.add(gridTwo, true);
 
 		CLocation locationOne = CLocation.external(0, 0, 560, 1500);
 		CLocation locationTwo = CLocation.external(2800, 0, 560, 1500);
