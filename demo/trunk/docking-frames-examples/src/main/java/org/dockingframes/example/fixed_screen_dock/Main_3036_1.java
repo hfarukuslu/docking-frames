@@ -25,9 +25,9 @@ import bibliothek.gui.dock.common.layout.FullLockConflictResolver;
  * http://forum.byte-welt.net/showthread.php?t=3036&page=2
  * 
  * */
-public class Main_3036 {
+public class Main_3036_1 {
 
-	static private final Logger log = LoggerFactory.getLogger(Main_3036.class);
+	static private final Logger log = LoggerFactory.getLogger(Main_3036_1.class);
 
 	public static void main(String[] args) {
 
