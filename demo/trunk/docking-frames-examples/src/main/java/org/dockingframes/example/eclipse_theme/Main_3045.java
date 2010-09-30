@@ -7,13 +7,14 @@ import java.awt.GridLayout;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
-import bibliothek.gui.DockTheme;
+import bibliothek.extension.gui.dock.theme.EclipseTheme;
 import bibliothek.gui.dock.FlapDockStation;
 import bibliothek.gui.dock.SplitDockStation;
 import bibliothek.gui.dock.common.CContentArea;
 import bibliothek.gui.dock.common.CControl;
 import bibliothek.gui.dock.common.DefaultSingleCDockable;
-import bibliothek.gui.dock.common.layout.ThemeMap;
+import bibliothek.gui.dock.common.intern.theme.CEclipseTheme;
+import bibliothek.gui.dock.dockable.ScreencaptureMovingImageFactory;
 
 /**
  * 
@@ -23,6 +24,7 @@ import bibliothek.gui.dock.common.layout.ThemeMap;
 
 public class Main_3045 {
 
+	@SuppressWarnings("deprecation")
 	public static void main(String[] args) {
 
 		JFrame frame = new JFrame();
@@ -35,9 +37,12 @@ public class Main_3045 {
 
 		CControl control = new CControl(frame);
 
-		control.setTheme(ThemeMap.KEY_ECLIPSE_THEME);
+		EclipseTheme theme = new EclipseTheme();
 
-		DockTheme theme = control.intern().getController().getTheme();
+		theme.setMovingImageFactory(new ScreencaptureMovingImageFactory(
+				new Dimension(200, 200)));
+
+		control.setTheme(new CEclipseTheme(control, theme));
 
 		CContentArea contentArea = control.getContentArea();
 
