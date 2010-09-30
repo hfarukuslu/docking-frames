@@ -109,6 +109,8 @@ public class AP_ScreenDockDialog extends ScreenDockDialog {
 
 	private void setStation(SplitDockStation station) {
 
+		this.station = station;
+
 		if (this.station != null) {
 
 			Component c = this.station.getContentPane();
@@ -117,8 +119,6 @@ public class AP_ScreenDockDialog extends ScreenDockDialog {
 			c.removeMouseMotionListener(listener);
 
 		}
-
-		this.station = station;
 
 		if (this.station != null) {
 
