@@ -64,7 +64,7 @@ public class Main_3036_2 {
 		control.add(gridTwo, true);
 
 		// quick hack to make it compatible with "boundary restriction"
-		int ratio = 6;
+		int ratio = AP_BoundaryRestriction.RATIO;
 		Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
 		int w = screen.width;
 		int h = screen.height;

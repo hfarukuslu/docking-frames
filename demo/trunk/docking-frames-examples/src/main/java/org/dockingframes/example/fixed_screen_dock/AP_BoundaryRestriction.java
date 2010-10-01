@@ -20,7 +20,7 @@ public class AP_BoundaryRestriction implements BoundaryRestriction {
 
 	private Rectangle parkCurrent;
 
-	private final int ratioWidth = 6;
+	public static final int RATIO = 6;
 
 	public AP_BoundaryRestriction() {
 
@@ -28,12 +28,12 @@ public class AP_BoundaryRestriction implements BoundaryRestriction {
 
 		log.info("screen : {}", screen);
 
-		parkLeft = new Rectangle(0, 0, screen.width / ratioWidth, screen.height);
+		parkLeft = new Rectangle(0, 0, screen.width / RATIO, screen.height);
 
 		log.info("left : {}", parkLeft);
 
-		parkRight = new Rectangle(screen.width - screen.width / ratioWidth, 0,
-				screen.width / ratioWidth, screen.height);
+		parkRight = new Rectangle(screen.width - screen.width / RATIO, 0,
+				screen.width / RATIO, screen.height);
 
 		log.info("right : {}", parkRight);
 
