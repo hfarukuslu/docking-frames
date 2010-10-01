@@ -3,6 +3,7 @@ package org.dockingframes.example.fixed_screen_dock;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.GridLayout;
+import java.awt.Toolkit;
 import java.util.List;
 
 import javax.swing.JFrame;
@@ -54,12 +55,22 @@ public class Main_3036_2 {
 		CGridArea gridOne = new AP_GridArea(control, "grid one");
 		CGridArea gridTwo = new AP_GridArea(control, "grid two");
 
-		// must mark as root
+		// must register as dockable
+		control.add(gridOne);
+		control.add(gridTwo);
+
+		// must register as dock station
 		control.add(gridOne, true);
 		control.add(gridTwo, true);
 
-		CLocation locationOne = CLocation.external(0, 0, 560, 1500);
-		CLocation locationTwo = CLocation.external(2800, 0, 560, 1500);
+		// quick hack to make it compatible with "boundary restriction"
+		int ratio = 6;
+		Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
+		int w = screen.width;
+		int h = screen.height;
+
+		CLocation locationOne = CLocation.external(0, 0, w / ratio, h);
+		CLocation locationTwo = CLocation.external(w - w / ratio, 0, w, h);
 
 		gridOne.setLocation(locationOne);
 		gridTwo.setLocation(locationTwo);
