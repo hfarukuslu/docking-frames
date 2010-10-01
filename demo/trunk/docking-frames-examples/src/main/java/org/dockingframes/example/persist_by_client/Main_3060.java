@@ -14,6 +14,7 @@ import bibliothek.gui.dock.SplitDockStation;
 import bibliothek.gui.dock.common.CContentArea;
 import bibliothek.gui.dock.common.CControl;
 import bibliothek.gui.dock.common.DefaultSingleCDockable;
+import bibliothek.gui.dock.common.SingleCDockableBackupFactory;
 import bibliothek.gui.dock.common.layout.ThemeMap;
 import bibliothek.gui.dock.support.util.ApplicationResourceManager;
 import bibliothek.util.xml.XElement;
@@ -75,6 +76,9 @@ public class Main_3060 {
 
 		log.info("read xml");
 
+		String id = "red";
+		control.addSingleBackupFactory(id, backupFactory);
+
 		resourceManager.readXML(element);
 
 		sleep(2 * 1000);
@@ -82,6 +86,8 @@ public class Main_3060 {
 		log.info("finished");
 
 	}
+
+	static SingleCDockableBackupFactory backupFactory = new AP_SingleCDockableBackupFactory();
 
 	static DefaultSingleCDockable create(String title, Color color) {
 
