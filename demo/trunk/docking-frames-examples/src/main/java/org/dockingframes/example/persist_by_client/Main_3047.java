@@ -60,8 +60,10 @@ public class Main_3047 {
 
 	}
 
-	// create a layout (yeah, not very nice. But currently there is no other
-	// way)
+	/*
+	 * create a layout (yeah, not very nice. But currently there is no other
+	 * way)
+	 */
 	private static String createTestLayoutData() {
 
 		CControl control = new CControl();
@@ -88,8 +90,10 @@ public class Main_3047 {
 
 	// ViewFunction -> SingleCDockable
 	public static SingleCDockable wrap(ViewFunction function) {
+
 		return new DefaultSingleCDockable(function.getTitle(),
 				function.getTitle(), function.getContent());
+
 	}
 
 	// Out backup-factory
@@ -104,8 +108,11 @@ public class Main_3047 {
 
 		@Override
 		public SingleCDockable createBackup(String id) {
+
 			System.out.println("using factory for: " + id);
+
 			return wrap(function);
+
 		}
 
 	}
@@ -138,10 +145,13 @@ public class Main_3047 {
 
 		@Override
 		public JComponent getContent() {
+
 			JPanel panel = new JPanel();
 			panel.setOpaque(true);
 			panel.setBackground(color);
+
 			return panel;
+
 		}
 
 	}
