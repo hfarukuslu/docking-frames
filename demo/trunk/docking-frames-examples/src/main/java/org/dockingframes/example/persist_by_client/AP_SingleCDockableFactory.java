@@ -8,16 +8,19 @@ import bibliothek.gui.dock.common.DefaultSingleCDockable;
 import bibliothek.gui.dock.common.SingleCDockable;
 import bibliothek.gui.dock.common.SingleCDockableBackupFactory;
 
-public class AP_SingleCDockableBackupFactory implements
+public class AP_SingleCDockableFactory implements
 		SingleCDockableBackupFactory {
 
 	@Override
 	public SingleCDockable createBackup(String id) {
 
 		JPanel panel = new JPanel();
+
 		panel.setOpaque(true);
 
-		Color color = Color.RED;
+		panel.setName("!!!name!!!");
+
+		Color color = Color.ORANGE;
 
 		panel.setBackground(color);
 

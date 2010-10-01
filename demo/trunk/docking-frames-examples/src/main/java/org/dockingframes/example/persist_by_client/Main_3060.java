@@ -1,8 +1,11 @@
 package org.dockingframes.example.persist_by_client;
 
 import java.awt.Color;
+import java.awt.Component;
+import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.GridLayout;
+import java.util.List;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -13,7 +16,9 @@ import org.slf4j.LoggerFactory;
 import bibliothek.gui.dock.SplitDockStation;
 import bibliothek.gui.dock.common.CContentArea;
 import bibliothek.gui.dock.common.CControl;
+import bibliothek.gui.dock.common.CControlRegister;
 import bibliothek.gui.dock.common.DefaultSingleCDockable;
+import bibliothek.gui.dock.common.SingleCDockable;
 import bibliothek.gui.dock.common.SingleCDockableBackupFactory;
 import bibliothek.gui.dock.common.layout.ThemeMap;
 import bibliothek.gui.dock.support.util.ApplicationResourceManager;
@@ -72,22 +77,50 @@ public class Main_3060 {
 		frame.setLocationRelativeTo(null);
 		frame.setVisible(true);
 
-		sleep(2 * 1000);
+		sleep(1 * 1000);
 
-		log.info("read xml");
+		log.info("read xml, no backup");
+
+		resourceManager.readXML(element);
+
+		sleep(1 * 1000);
+
+		log.info("read xml, from backup");
 
 		String id = "red";
 		control.addSingleBackupFactory(id, backupFactory);
 
 		resourceManager.readXML(element);
 
-		sleep(2 * 1000);
+		sleep(1 * 1000);
+
+		CControlRegister register = control.getRegister();
+
+		List<SingleCDockable> dockableList = register.getSingleDockables();
+
+		for (SingleCDockable dockable : dockableList) {
+
+			log.info("dockable : {}", dockable);
+
+			Component component = dockable.intern().getComponent();
+
+			log.info("component : {}", component.getName());
+
+			Container container = (Container) component;
+
+			for (Component comp : container.getComponents()) {
+
+				log.info("comp : {}", comp.getName());
+
+			}
+
+		}
 
 		log.info("finished");
 
 	}
 
-	static SingleCDockableBackupFactory backupFactory = new AP_SingleCDockableBackupFactory();
+	static SingleCDockableBackupFactory backupFactory = new AP_SingleCDockableFactory();
 
 	static DefaultSingleCDockable create(String title, Color color) {
 
