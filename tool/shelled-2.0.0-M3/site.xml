@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?><site pack200="true">	<description>To install these features, point Eclipse at this site.</description>
+
+	<!-- ShellEd 2.0.0 N201007201531 -->
+	<category-def label="ShellEd 2.0.0 N201007201531" name="ShellEd 2.0.0 N201007201531">
+		<description>ShellEd 2.0.0 N201007201531: contains all features in this build.</description>
+	</category-def>
+	<feature id="net.sourceforge.shelled" version="2.0.0.201007201532-1--773533H735D97" url="features/net.sourceforge.shelled_2.0.0.201007201532-1--773533H735D97.jar" patch="false">
+		<category name="ShellEd 2.0.0 N201007201531"/>
+	</feature>
+
+</site>
