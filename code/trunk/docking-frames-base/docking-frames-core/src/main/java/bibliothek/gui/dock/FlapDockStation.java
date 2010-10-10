@@ -105,6 +105,10 @@ import bibliothek.gui.dock.util.PropertyValue;
 import bibliothek.gui.dock.util.property.ConstantPropertyFactory;
 import bibliothek.gui.dock.util.property.DynamicPropertyFactory;
 import bibliothek.util.Path;
+import bibliothek.util.Todo;
+import bibliothek.util.Todo.Compatibility;
+import bibliothek.util.Todo.Priority;
+import bibliothek.util.Todo.Version;
 
 /**
  * This {@link DockStation} shows only a title for each of it's children.<br>
@@ -112,6 +116,8 @@ import bibliothek.util.Path;
  * which owns the clicked title is shown in this window.
  * @author Benjamin Sigg
  */
+@Todo(compatibility=Compatibility.COMPATIBLE, priority=Priority.MINOR, target=Version.VERSION_1_1_0,
+		description="Allow clients to tell whether a Dockable should be opened if dropped on this station")
 public class FlapDockStation extends AbstractDockableStation {
     /** 
      * The direction in which the window with the <code>Dockable</code> will popup,
@@ -1610,6 +1616,8 @@ public class FlapDockStation extends AbstractDockableStation {
         handles.remove( index );
         handle.setTitle( null );
         dockable.removeDockableListener( dockableListener );
+        // race condition, only required if not called from the EDT
+        buttonPane.resetTitles();
         listeners.fireDockableRemoved( dockable );
     }
     
@@ -1635,6 +1643,7 @@ public class FlapDockStation extends AbstractDockableStation {
         DockableHandle handle = link( dockable );
         handles.dockables().add( index, handle );
         dockable.setDockParent( this );
+        buttonPane.resetTitles(); // race condition, only required if not called from the EDT
         listeners.fireDockableAdded( dockable );
     }
     

@@ -80,7 +80,6 @@ import bibliothek.gui.dock.common.intern.CDockableAccess;
 import bibliothek.gui.dock.common.intern.CListenerCollection;
 import bibliothek.gui.dock.common.intern.CPlaceholderStrategy;
 import bibliothek.gui.dock.common.intern.CSetting;
-import bibliothek.gui.dock.common.intern.CSingleParentRemover;
 import bibliothek.gui.dock.common.intern.CommonDockable;
 import bibliothek.gui.dock.common.intern.CommonDockableLayout;
 import bibliothek.gui.dock.common.intern.CommonMultipleDockableFactory;
@@ -88,20 +87,19 @@ import bibliothek.gui.dock.common.intern.CommonSingleDockableFactory;
 import bibliothek.gui.dock.common.intern.ControlVetoClosingListener;
 import bibliothek.gui.dock.common.intern.ControlVetoFocusListener;
 import bibliothek.gui.dock.common.intern.EfficientControlFactory;
-import bibliothek.gui.dock.common.intern.ExtendedModeAcceptance;
 import bibliothek.gui.dock.common.intern.MutableCControlRegister;
 import bibliothek.gui.dock.common.intern.SecureControlFactory;
-import bibliothek.gui.dock.common.intern.StackableAcceptance;
-import bibliothek.gui.dock.common.intern.WorkingAreaAcceptance;
 import bibliothek.gui.dock.common.intern.action.CActionOffer;
 import bibliothek.gui.dock.common.intern.station.CFlapLayoutManager;
 import bibliothek.gui.dock.common.intern.station.CLockedResizeLayoutManager;
 import bibliothek.gui.dock.common.intern.station.ScreenResizeRequestHandler;
-import bibliothek.gui.dock.common.intern.theme.eclipse.CommonEclipseThemeConnector;
+import bibliothek.gui.dock.common.intern.ui.CSingleParentRemover;
 import bibliothek.gui.dock.common.intern.ui.CommonSingleTabDecider;
+import bibliothek.gui.dock.common.intern.ui.ExtendedModeAcceptance;
+import bibliothek.gui.dock.common.intern.ui.StackableAcceptance;
+import bibliothek.gui.dock.common.intern.ui.WorkingAreaAcceptance;
 import bibliothek.gui.dock.common.layout.FullLockConflictResolver;
 import bibliothek.gui.dock.common.layout.RequestDimension;
-import bibliothek.gui.dock.common.layout.ThemeMap;
 import bibliothek.gui.dock.common.location.CExternalizedLocation;
 import bibliothek.gui.dock.common.mode.CExternalizedMode;
 import bibliothek.gui.dock.common.mode.CLocationMode;
@@ -110,6 +108,8 @@ import bibliothek.gui.dock.common.mode.CMaximizedMode;
 import bibliothek.gui.dock.common.mode.CMaximizedModeArea;
 import bibliothek.gui.dock.common.mode.ExtendedMode;
 import bibliothek.gui.dock.common.mode.station.CScreenDockStationHandle;
+import bibliothek.gui.dock.common.theme.ThemeMap;
+import bibliothek.gui.dock.common.theme.eclipse.CommonEclipseThemeConnector;
 import bibliothek.gui.dock.control.DockRegister;
 import bibliothek.gui.dock.displayer.SingleTabDecider;
 import bibliothek.gui.dock.event.DockAdapter;
@@ -1300,7 +1300,7 @@ public class CControl {
      * A root station often does not have a parent, the location of a {@link CDockable}
      * is always relative to its youngest parent that is a root station.
      * @param check if <code>true</code> a check of the unique id is performed,
-     * otherwise the station is just put into, perhaps wrongly replacing
+     * otherwise the station is just put in, perhaps wrongly replacing
      * other stations.
      */    
     private void add( CStation<?> station, boolean root, boolean check ){
