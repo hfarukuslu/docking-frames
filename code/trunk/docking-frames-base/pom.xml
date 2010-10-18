@@ -11,7 +11,7 @@
 	<groupId>org.dockingframes</groupId>
 	<artifactId>docking-frames-base</artifactId>
 	<packaging>pom</packaging>
-	<version>1.0.8</version>
+	<version>1.0.9-SNAPSHOT</version>
 
 	<modules>
 		<module>docking-frames-core</module>
@@ -40,9 +40,9 @@
 	</organization>
 
 	<scm>
-		<connection>scm:svn:http://docking-frames.googlecode.com/svn/code/tags/docking-frames-base-1.0.8</connection>
-		<developerConnection>scm:svn:https://docking-frames.googlecode.com/svn/code/tags/docking-frames-base-1.0.8</developerConnection>
-		<url>http://code.google.com/p/docking-frames/source/browse/#svn/code/tags/docking-frames-base-1.0.8</url>
+		<connection>scm:svn:http://docking-frames.googlecode.com/svn/code/trunk/docking-frames-base</connection>
+		<developerConnection>scm:svn:https://docking-frames.googlecode.com/svn/code/trunk/docking-frames-base</developerConnection>
+		<url>http://code.google.com/p/docking-frames/source/browse/#svn/code/trunk/docking-frames-base</url>
 	</scm>
 
 	<licenses>
