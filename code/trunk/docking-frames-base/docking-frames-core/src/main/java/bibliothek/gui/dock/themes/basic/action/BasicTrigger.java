@@ -25,9 +25,10 @@
  */
 package bibliothek.gui.dock.themes.basic.action;
 
+
 /**
- * Used as a callback by a {@link BasicButtonModel} when the user triggers a view
- * like a button.
+ * Used as a callback by a {@link BasicButtonModel} to ensure the availability of properties and to inform
+ * when the user triggers a view like a button.
  * @author Benjamin Sigg
  */
 public interface BasicTrigger {

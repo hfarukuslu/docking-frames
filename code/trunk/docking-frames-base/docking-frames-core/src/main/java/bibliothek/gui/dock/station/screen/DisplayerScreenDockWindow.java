@@ -35,12 +35,16 @@ import java.util.List;
 import javax.swing.SwingUtilities;
 
 import bibliothek.gui.DockController;
+import bibliothek.gui.DockStation;
 import bibliothek.gui.Dockable;
 import bibliothek.gui.dock.ScreenDockStation;
 import bibliothek.gui.dock.station.DockableDisplayer;
 import bibliothek.gui.dock.station.DockableDisplayerListener;
 import bibliothek.gui.dock.station.StationChildHandle;
+import bibliothek.gui.dock.themes.ThemeManager;
 import bibliothek.gui.dock.title.DockTitle;
+import bibliothek.gui.dock.util.BackgroundAlgorithm;
+import bibliothek.gui.dock.util.BackgroundPaint;
 
 /**
  * A window that uses a {@link DockableDisplayer} to show the {@link Dockable}.
@@ -74,6 +78,9 @@ public abstract class DisplayerScreenDockWindow implements ScreenDockWindow {
     
     /** boundaries used in normal mode */
     private Rectangle normalBounds;
+    
+    /** the algorithm that paints the background */
+    private Background background = new Background();
     
     /**
      * Creates a new window
@@ -143,6 +150,12 @@ public abstract class DisplayerScreenDockWindow implements ScreenDockWindow {
      * @return the base component
      */
     protected abstract Component getWindowComponent();
+    
+    /**
+     * Sets the algorithm that paints the background of this window.
+     * @param background the algorithm, may be <code>null</code>
+     */
+    protected abstract void setBackground( BackgroundAlgorithm background );
 
     /**
      * Sets whether the {@link DockTitle} should be shown or not.
@@ -218,7 +231,12 @@ public abstract class DisplayerScreenDockWindow implements ScreenDockWindow {
     
     public boolean isFullscreen() {
     	if( strategy == null ){
-    		throw new IllegalStateException( "no strategy available" );
+    		if( isVisible() ){
+    			throw new IllegalStateException( "no strategy available" );
+    		}
+    		else{
+    			return false;
+    		}
     	}
     	return strategy.isFullscreen( this );
     }
@@ -250,6 +268,7 @@ public abstract class DisplayerScreenDockWindow implements ScreenDockWindow {
     		}
     	}
     	
+    	background.setController( controller );
         this.controller = controller;
         
         // create new DockTitle
@@ -359,5 +378,38 @@ public abstract class DisplayerScreenDockWindow implements ScreenDockWindow {
     
     public ScreenDockStation getStation(){
         return station;
+    }
+    
+    /**
+     * The algorithm that paints the background of this window.
+     * @author Benjamin Sigg
+     */
+    protected class Background extends BackgroundAlgorithm implements ScreenDockWindowBackgroundComponent{
+    	public Background(){
+    		super( ScreenDockWindowBackgroundComponent.KIND, ThemeManager.BACKGROUND_PAINT + ".station.screen" );
+    	}
+    	
+    	@Override
+    	public void set( BackgroundPaint value ){
+    		super.set( value );
+    		if( getPaint() == null ){
+    			setBackground( null );
+    		}
+    		else{
+    			setBackground( this );
+    		}
+    	}
+    	
+		public ScreenDockWindow getWindow(){
+			return DisplayerScreenDockWindow.this;
+		}
+
+		public DockStation getStation(){
+			return getWindow().getStation();
+		}
+
+		public Component getComponent(){
+			return getWindowComponent();
+		}
     }
 }

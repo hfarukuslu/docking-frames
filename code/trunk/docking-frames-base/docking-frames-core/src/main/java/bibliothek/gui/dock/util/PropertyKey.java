@@ -40,11 +40,15 @@ import bibliothek.gui.dock.util.property.PropertyFactory;
  */
 public class PropertyKey<A> {
 	/**
-	 * The Icon used for a {@link Dockable} if it has no icon.
+	 * The Icon used for a {@link Dockable} if it has no icon.<br>
+	 * This key should only be used for writing the icon, reading the icon should be done throught the {@link IconManager}
+	 * using the key "dockable.default".
 	 */
 	public static final PropertyKey<Icon> DOCKABLE_ICON = new PropertyKey<Icon>( "javax.swing.Icon_dockable_icon" );
 	/**
-	 * The Icon used for a {@link DockStation} if it has no icon.
+	 * The Icon used for a {@link DockStation} if it has no icon.<br>
+	 * This key should only be used for writing the icon, reading the icon should be done throught the {@link IconManager}
+	 * using the key "dockStation.default".
 	 */
 	public static final PropertyKey<Icon> DOCK_STATION_ICON = new PropertyKey<Icon>( "javax.swing.Icon_dock_station_icon" );
 	
@@ -104,7 +108,8 @@ public class PropertyKey<A> {
      * @param value the value that will be used when no value is set
      * in the properties
 	 * @param nullValueReplacedByDefault if set, then the <code>null</code> value
-	 * in {@link DockProperties} gets replaced by the default value of this key.
+	 * in {@link DockProperties} gets replaced by the default value of this key even if
+	 * the <code>null</code> value was set explicitely.
 	 */
 	public PropertyKey( String id, PropertyFactory<A> value, boolean nullValueReplacedByDefault ){
 		if( id == null )

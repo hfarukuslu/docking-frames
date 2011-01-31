@@ -7,8 +7,8 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 
 import javax.swing.Icon;
-import javax.swing.JPanel;
 
+import bibliothek.gui.dock.util.BackgroundPanel;
 import bibliothek.gui.dock.util.font.FontModifier;
 
 /**
@@ -16,7 +16,7 @@ import bibliothek.gui.dock.util.font.FontModifier;
  * between horizontal and vertical.
  * @author Benjamin Sigg
  */
-public class OrientedLabel extends JPanel{
+public class OrientedLabel extends BackgroundPanel{
     /** The label which really paints the text */
     private DLabel label = new DLabel();
     
@@ -45,6 +45,7 @@ public class OrientedLabel extends JPanel{
      * Creates a new label with no text
      */
     public OrientedLabel(){
+    	super( false, false );
         setOpaque( false );
         label.setOpaque( false );
         label.setAlignmentX( 0 );
@@ -153,7 +154,7 @@ public class OrientedLabel extends JPanel{
      */
     public void setText( String text ){
         this.text = text;
-        label.setText( text == null ? null : "  " + text );
+        label.setText( (text == null || text.length() == 0) ? null : "  " + text );
         revalidate();
         repaint();
     }
@@ -276,7 +277,12 @@ public class OrientedLabel extends JPanel{
     }
     
     @Override
-    public void paint( Graphics g ) {
+    public void paint( Graphics g ){
+    	paintComponent( g );
+    }
+    
+    @Override
+    public void paintForeground( Graphics g ){
         if( rotation == Rotation.DEGREE_0 ){
         	if( icon == null ){
         		label.paint( g );

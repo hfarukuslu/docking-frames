@@ -39,7 +39,6 @@ import bibliothek.gui.dock.event.DockStationListener;
 import bibliothek.gui.dock.layout.DockableProperty;
 import bibliothek.gui.dock.station.DockableDisplayer;
 import bibliothek.gui.dock.station.StationChildHandle;
-import bibliothek.gui.dock.station.split.SplitDockTree.Key;
 import bibliothek.gui.dock.station.support.PlaceholderMap;
 import bibliothek.gui.dock.station.support.PlaceholderStrategy;
 import bibliothek.util.Path;
@@ -98,6 +97,16 @@ public class Leaf extends VisibleSplitNode{
     @Override
     public void setChild( SplitNode child, int location ) {
         throw new IllegalStateException( "can't add children to a leaf" );
+    }
+    
+    @Override
+    public int getMaxChildrenCount(){
+    	return 0;
+    }
+    
+    @Override
+    public SplitNode getChild( int location ){
+    	return null;
     }
     
     /**
@@ -256,7 +265,9 @@ public class Leaf extends VisibleSplitNode{
         super.updateBounds( x, y, width, height, factorW, factorH, components );
         DockableDisplayer displayer = getDisplayer();
         
-        if( components && displayer != null && displayer != getAccess().getFullScreenDockable() )
+        StationChildHandle fullscreen = getAccess().getFullScreenDockable();
+        
+        if( components && displayer != null && (fullscreen == null || displayer != fullscreen.getDisplayer() ))
             displayer.getComponent().setBounds( getBounds() );
     }
         
@@ -361,7 +372,7 @@ public class Leaf extends VisibleSplitNode{
     }
     
     @Override
-    public void evolve( Key key, boolean checkValidity, Map<Leaf, Dockable> linksToSet ){
+    public void evolve( SplitDockTree<Dockable>.Key key, boolean checkValidity, Map<Leaf, Dockable> linksToSet ){
     	setPlaceholders( key.getTree().getPlaceholders( key ) );
     	setPlaceholderMap( key.getTree().getPlaceholderMap( key ) );
     }

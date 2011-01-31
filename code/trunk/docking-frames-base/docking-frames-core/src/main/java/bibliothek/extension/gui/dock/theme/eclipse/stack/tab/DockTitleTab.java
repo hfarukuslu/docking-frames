@@ -18,6 +18,7 @@ import javax.swing.border.Border;
 import javax.swing.event.MouseInputListener;
 
 import bibliothek.extension.gui.dock.theme.EclipseTheme;
+import bibliothek.extension.gui.dock.theme.eclipse.stack.EclipseTab;
 import bibliothek.extension.gui.dock.theme.eclipse.stack.EclipseTabPane;
 import bibliothek.gui.DockController;
 import bibliothek.gui.DockStation;
@@ -202,6 +203,10 @@ public class DockTitleTab implements TabComponent{
     	}
     }
     
+    public void setTab( EclipseTab tab ){
+    	// ignore
+    }
+    
     public void bind() {
     	title.install();
     	title.request();
@@ -239,6 +244,14 @@ public class DockTitleTab implements TabComponent{
     
     public boolean isUsedAsTitle() {
         return true;
+    }
+    
+    public boolean shouldTransfersFocus(){
+	    return true;
+    }
+    
+    public boolean shouldFocus(){
+    	return true;
     }
     
     public Point getPopupLocation( Point click, boolean popupTrigger ) {

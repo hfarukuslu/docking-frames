@@ -40,6 +40,7 @@ import javax.swing.JRootPane;
 import javax.swing.KeyStroke;
 
 import bibliothek.gui.DockController;
+import bibliothek.gui.DockTheme;
 import bibliothek.gui.Dockable;
 import bibliothek.gui.dock.focus.DockableSelection;
 import bibliothek.gui.dock.focus.DockableSelectionListener;
@@ -120,11 +121,11 @@ public class DockableSelector {
      */
     public void stop( Dockable dockable ){
         close();
-        controller.setFocusedDockable( dockable, false );
+        controller.setFocusedDockable( dockable, null, false );
     }
     
     private void open(){
-        selection = controller.getTheme().getDockableSelection( controller );
+        selection = controller.getProperties().get( DockTheme.DOCKABLE_SELECTION );
         if( selection != null && selection.hasChoices( controller )){
             Window root = controller.findRootWindow();
             if( dialog == null || dialog.getOwner() != root ){

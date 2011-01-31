@@ -1,4 +1,4 @@
-/**
+/*
  * Bibliothek - DockingFrames
  * Library built on Java/Swing, allows the user to "drag and drop"
  * panels containing any Swing-Component the developer likes to add.
@@ -31,6 +31,7 @@ import java.awt.Point;
 import java.awt.Rectangle;
 import java.io.IOException;
 
+import javax.swing.Icon;
 import javax.swing.SwingUtilities;
 
 import bibliothek.gui.DockController;
@@ -47,6 +48,7 @@ import bibliothek.gui.dock.station.support.DockStationListenerManager;
 import bibliothek.gui.dock.title.DockTitle;
 import bibliothek.gui.dock.title.DockTitleRequest;
 import bibliothek.gui.dock.util.PropertyKey;
+import bibliothek.gui.dock.util.icon.DockIcon;
 
 /**
  * An abstract combination between {@link DockStation} and {@link Dockable}. This
@@ -69,7 +71,16 @@ public abstract class AbstractDockableStation extends AbstractDockable implement
 	 * Constructs a new station, but does nothing more
 	 */
 	public AbstractDockableStation(){
-		super( PropertyKey.DOCK_STATION_ICON, PropertyKey.DOCK_STATION_TITLE, PropertyKey.DOCK_STATION_TOOLTIP );
+		super( PropertyKey.DOCK_STATION_TITLE, PropertyKey.DOCK_STATION_TOOLTIP );
+	}
+	
+	@Override
+	protected DockIcon createTitleIcon(){
+		return new DockStationIcon( "dockStation.default", this ){
+			protected void changed( Icon oldValue, Icon newValue ){
+				fireTitleIconChanged( oldValue, newValue );
+			}
+		};
 	}
 	
 	/**
@@ -139,16 +150,14 @@ public abstract class AbstractDockableStation extends AbstractDockable implement
     }
 
     public boolean isStationVisible() {
-        Dockable dockable = asDockable();
-        if( dockable == null )
-            return true;
-        
-        DockStation parent = dockable.getDockParent();
-        
-        if( parent == null )
-            return true;
-        else
-            return parent.isVisible( dockable );
+    	boolean visible = isDockableVisible();
+    	if( visible ){
+    		return true;
+    	}
+    	if( getController() != null ){
+    		return getComponent().isShowing();
+    	}
+    	return false;
     }
 
     public boolean accept( Dockable child ) {
@@ -198,5 +207,32 @@ public abstract class AbstractDockableStation extends AbstractDockable implement
         Point location = new Point( 0, 0 );
         SwingUtilities.convertPointToScreen( location, component );
         return new Rectangle( location.x, location.y, component.getWidth(), component.getHeight() );
+    }
+    
+
+    /**
+     * Invokes {@link DockStationListenerManager#fireDockablesRepositioned(Dockable...)} for
+     * all children starting at index <code>fromIndex</code>.
+     * @param fromIndex the index of the first moved child
+     */
+    protected void fireDockablesRepositioned( int fromIndex ){
+    	fireDockablesRepositioned( fromIndex, getDockableCount()-1 );
+    }
+    
+    /**
+     * Invokes {@link DockStationListenerManager#fireDockablesRepositioned(Dockable...)} for
+     * all children starting at index <code>fromIndex</code> to index <code>toIndex</code>.
+     * @param fromIndex the index of the first moved child
+     * @param toIndex the index of the last moved child
+     */
+    protected void fireDockablesRepositioned( int fromIndex, int toIndex ){
+        int count = toIndex - fromIndex + 1;
+        if( count > 0 ){
+        	Dockable[] moved = new Dockable[count];
+        	for( int i = 0; i < count; i++ ){
+        		moved[i] = getDockable( i+fromIndex );
+        	}
+        	listeners.fireDockablesRepositioned( moved );
+        }
     }
 }

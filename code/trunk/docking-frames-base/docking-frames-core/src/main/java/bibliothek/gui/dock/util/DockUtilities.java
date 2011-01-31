@@ -38,6 +38,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
@@ -51,10 +52,13 @@ import bibliothek.gui.Dockable;
 import bibliothek.gui.dock.DockElement;
 import bibliothek.gui.dock.DockElementRepresentative;
 import bibliothek.gui.dock.layout.DockableProperty;
+import bibliothek.gui.dock.perspective.PerspectiveDockable;
+import bibliothek.gui.dock.perspective.PerspectiveElement;
+import bibliothek.gui.dock.perspective.PerspectiveStation;
 import bibliothek.gui.dock.station.support.PlaceholderStrategy;
 import bibliothek.gui.dock.title.DockTitle;
-import bibliothek.util.Todo;
 import bibliothek.util.Path;
+import bibliothek.util.Todo;
 import bibliothek.util.Todo.Compatibility;
 import bibliothek.util.Todo.Version;
 
@@ -140,8 +144,14 @@ public class DockUtilities {
      */
     private static void visitStation( DockStation station, DockVisitor visitor ){
         visitor.handleDockStation( station );
-        for( int i = 0, n = station.getDockableCount(); i<n; i++ )
-            visitDockable( station.getDockable( i ), visitor );
+        Dockable[] children = new Dockable[ station.getDockableCount() ];
+        for( int i = 0; i < children.length; i++ ){
+        	children[i] = station.getDockable( i );
+        }
+        
+        for( Dockable child : children ){
+            visitDockable( child, visitor );
+        }
     }
     
     /**
@@ -189,6 +199,35 @@ public class DockUtilities {
                 return true;
             
             station = dockable.getDockParent();
+            dockable = station == null ? null : station.asDockable();
+        }
+        
+        return station == ancestor;
+    }
+    
+    /**
+     * Tells whether <code>child</code> is identical with <code>ancestor</code>
+     * or a child of <code>ancestor</code>.
+     * @param ancestor an element
+     * @param child another element
+     * @return <code>true</code> if <code>ancestor</code> is a parent of or
+     * identical with <code>child</code>. 
+     */
+    public static boolean isAncestor( PerspectiveElement ancestor, PerspectiveElement child ){
+        if( ancestor == null )
+            throw new NullPointerException( "ancestor must not be null" );
+        
+        if( child == null )
+            throw new NullPointerException( "child must not be null" );
+        
+        PerspectiveDockable dockable = child.asDockable();
+        PerspectiveStation station = null;
+        
+        while( dockable != null ){
+            if( ancestor == dockable )
+                return true;
+            
+            station = dockable.getParent();
             dockable = station == null ? null : station.asDockable();
         }
         
@@ -316,6 +355,43 @@ public class DockUtilities {
         }
     }
     
+
+    /**
+     * Creates a {@link DockableProperty} describing the path from
+     * <code>ground</code> to <code>dockable</code>.
+     * @param ground the base of the property
+     * @param dockable an indirect child of <code>ground</code>
+     * @return a property for the path <code>ground</code> to <code>dockable</code>.
+     * @throws IllegalArgumentException if <code>ground</code> is not an
+     * ancestor of <code>dockable</code>
+     */
+    public static DockableProperty getPropertyChain( PerspectiveStation ground, PerspectiveDockable dockable ){
+        if( ground == dockable )
+            throw new IllegalArgumentException( "ground and dockable are the same" );
+        
+        PerspectiveStation parent = dockable.getParent();
+        DockableProperty property = parent.getDockableProperty( dockable, dockable );
+        PerspectiveDockable child = dockable;
+        
+        while( true ){
+            if( parent == ground )
+                return property;
+            
+            child = parent.asDockable();
+            if( child == null )
+                throw new IllegalArgumentException( "The chain is not complete" );
+            
+            parent = child.getParent();
+            if( parent == null )
+                throw new IllegalArgumentException( "The chain is not complete" );
+            
+            DockableProperty temp = parent.getDockableProperty( child, dockable );
+            temp.setSuccessor( property );
+            property = temp;
+        }
+    }
+    
+    
     /**
      * Searches a {@link Component} which is {@link Component#isShowing() showing}
      * and has something to do with <code>dockable</code>.<br>
@@ -368,10 +444,7 @@ public class DockUtilities {
         
         // check no cycles
         if( isAncestor( newChild, newParent )){
-            if( newChild.getDockParent() == newParent )
-                newParent.drag( newChild );
-            else
-                throw new IllegalArgumentException( "can't create a cycle" );
+            throw new IllegalArgumentException( "can't create a cycle" );
         }
         
         // remove old parent
@@ -380,6 +453,40 @@ public class DockUtilities {
                 throw new IllegalStateException( "old parent of child does not want do release the child" );
             
             oldParent.drag( newChild );
+        }
+    }
+    
+    /**
+     * Ensures that <code>newChild</code> has either no parent or <code>newParent</code> as parent, and that there will
+     * be no cycle when <code>newChild</code> is added to <code>newParent</code>
+     * @param newParent the element that becomes parent of <code>newChild</code>
+     * @param newChild the element that becomes child of <code>newParent</code>
+     * @throws NullPointerException if either <code>newParent</code> or <code>newChild</code> is <code>null</code>
+     * @throws IllegalArgumentException if there would be a cycle introduced
+     * @throws IllegalStateException if the old parent of <code>newChild</code> does not
+     * allow to remove its child
+     */
+    public static void ensureTreeValidity( PerspectiveStation newParent, PerspectiveDockable newChild ){
+        if( newParent == null )
+            throw new NullPointerException( "parent must not be null" );
+        
+        if( newChild == null )
+            throw new NullPointerException( "child must not be null" );
+        
+        PerspectiveStation oldParent = newChild.getParent();
+            
+        // check no self reference
+        if( newChild == newParent )
+            throw new IllegalArgumentException( "child and parent are the same" );
+        
+        // check no cycles
+        if( isAncestor( newChild, newParent )){
+            throw new IllegalArgumentException( "can't create a cycle" );
+        }
+        
+        // remove old parent
+        if( oldParent != null && oldParent != newParent ){
+        	oldParent.remove( newChild );
         }
     }
     
@@ -434,6 +541,20 @@ public class DockUtilities {
      * @see Properties#load(InputStream)
      */
     public static Map<String, Icon> loadIcons( String list, String path, ClassLoader loader ){
+    	return loadIcons( list, path, null, loader );
+    }
+    
+    /**
+     * Loads a map of icons.
+     * @param list a path to a property-file containing key-path-pairs.
+     * @param path the base path to the icons, will be added before any
+     * path of the property file, can be <code>null</code>
+     * @param ignore keys that are already present in <code>ignore</code> are not loaded, can be <code>null</code>
+     * @param loader used to transform paths into urls.
+     * @return the map of {@link Icon}s, the map can be empty if no icons were found
+     * @see Properties#load(InputStream)
+     */
+    public static Map<String, Icon> loadIcons( String list, String path, Set<String> ignore, ClassLoader loader ){
         try{
             InputStream in = loader.getResourceAsStream( list );
             if( in == null )
@@ -446,17 +567,20 @@ public class DockUtilities {
             Map<String, Icon> result = new HashMap<String, Icon>();
             for( Map.Entry<Object, Object> entry : properties.entrySet() ){
                 String key = (String)entry.getKey();
-                String file = (String)entry.getValue();
-                if( path != null )
-                    file = path + file;
                 
-                URL url = loader.getResource( file );
-                if( url == null ){
-                    System.err.println( "Missing file: " + file );
-                }
-                else{
-                    ImageIcon icon = new ImageIcon( url );
-                    result.put( key, icon );
+                if( ignore == null || !ignore.contains( key )){
+	                String file = (String)entry.getValue();
+	                if( path != null )
+	                    file = path + file;
+	                
+	                URL url = loader.getResource( file );
+	                if( url == null ){
+	                    System.err.println( "Missing file: " + file );
+	                }
+	                else{
+	                    ImageIcon icon = new ImageIcon( url );
+	                    result.put( key, icon );
+	                }
                 }
             }
             

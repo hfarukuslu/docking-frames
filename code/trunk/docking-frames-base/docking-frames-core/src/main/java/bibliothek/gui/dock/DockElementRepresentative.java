@@ -77,6 +77,21 @@ public interface DockElementRepresentative {
     public boolean isUsedAsTitle();
     
     /**
+     * Tells whether a click onto this component should transfer the focus either to this component or to the
+     * {@link Dockable}.
+     * @return <code>true</code> if clicking this component should influence focus
+     */
+    public boolean shouldFocus();
+    
+    /**
+     * Tells whether a click onto this component should transfer the focus to the {@link Dockable} or not. If this
+     * object is a {@link Dockable}, then a result of <code>true</code> might change the currently focused item
+     * of itself. This property is ignored if {@link #shouldFocus()} returns <code>false</code>.
+     * @return whether to change the focused component or not
+     */
+    public boolean shouldTransfersFocus();
+    
+    /**
      * Adds a listener to this representative, it is not defined what to do
      * with that listener, but most subclasses would just add the listener
      * to their {@link #getComponent() component}. It is valid to do nothing.

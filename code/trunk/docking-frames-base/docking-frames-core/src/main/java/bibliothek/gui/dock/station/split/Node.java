@@ -33,7 +33,6 @@ import java.util.Map;
 import bibliothek.gui.Dockable;
 import bibliothek.gui.dock.SplitDockStation;
 import bibliothek.gui.dock.SplitDockStation.Orientation;
-import bibliothek.gui.dock.station.split.SplitDockTree.Key;
 import bibliothek.util.Path;
 
 /**
@@ -145,9 +144,13 @@ public class Node extends VisibleSplitNode{
         }
         
         treeChanged();
+        if( left != null ){
+        	ensureIdUniqueAsync();
+        }
         
         getAccess().getOwner().revalidate();
         getAccess().getOwner().repaint();
+        getAccess().repositioned( this );
     }
     
     /**
@@ -178,9 +181,13 @@ public class Node extends VisibleSplitNode{
         }
         
         treeChanged();
+        if( right != null ){
+        	ensureIdUniqueAsync();
+        }
         
         getAccess().getOwner().revalidate();
         getAccess().getOwner().repaint();
+        getAccess().repositioned( this );
     }
 
     /**
@@ -210,6 +217,20 @@ public class Node extends VisibleSplitNode{
             setRight( child );
         else
             throw new IllegalArgumentException( "Location not valid " + location );
+    }
+    
+    @Override
+    public int getMaxChildrenCount(){
+    	return 2;
+    }
+    
+    @Override
+    public SplitNode getChild( int location ){
+    	switch( location ){
+    		case 0: return getLeft();
+    		case 1: return getRight();
+    		default: return null;
+    	}
     }
     
     /**
@@ -271,6 +292,7 @@ public class Node extends VisibleSplitNode{
         this.divider = divider;
         getAccess().getOwner().revalidate();
         getAccess().getOwner().repaint();
+        getAccess().repositioned( this );
     }
     
     /**
@@ -516,8 +538,8 @@ public class Node extends VisibleSplitNode{
     }
     
     @Override
-    public void evolve( Key key, boolean checkValidity, Map<Leaf, Dockable> linksToSet ){
-    	SplitDockTree tree = key.getTree();
+    public void evolve( SplitDockTree<Dockable>.Key key, boolean checkValidity, Map<Leaf, Dockable> linksToSet ){
+    	SplitDockTree<Dockable> tree = key.getTree();
     	setPlaceholders( tree.getPlaceholders( key ) );
     	setPlaceholderMap( tree.getPlaceholderMap( key ) );
     	
@@ -616,7 +638,12 @@ public class Node extends VisibleSplitNode{
 
     				long splitId = -1;
     				if( lastNode != node ){
-    					splitId = node.getId();
+    					if( depth > 0 ){
+    						splitId = property.getNode( depth-1 ).getId();
+    					}
+    					else{
+    						splitId = node.getId();
+    					}
     				}
     				Leaf leaf = create( dockable, leafId );
     				if( leaf == null )
@@ -715,8 +742,12 @@ public class Node extends VisibleSplitNode{
     @Override
     public void visit( SplitNodeVisitor visitor ) {
         visitor.handleNode( this );
-        left.visit( visitor );
-        right.visit( visitor );
+        if( left != null ){
+        	left.visit( visitor );
+        }
+        if( right != null ){
+        	right.visit( visitor );
+        }
     }
     
     @Override

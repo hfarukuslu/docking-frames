@@ -28,6 +28,7 @@ package bibliothek.extension.gui.dock.preference;
 import java.util.ArrayList;
 import java.util.List;
 
+import bibliothek.gui.DockController;
 import bibliothek.util.Path;
 import bibliothek.util.PathCombiner;
 
@@ -65,17 +66,20 @@ public class MergedPreferenceModel extends AbstractPreferenceModel{
     
     /**
      * Creates a new model
+     * @param controller the controller in whose realm this model is used
      */
-    public MergedPreferenceModel(){
-        // nothing
+    public MergedPreferenceModel( DockController controller ){
+    	super( controller );
     }
     
     /**
      * Creates a new path.
      * @param combiner tells how to combine the path of a model and of
      * its preferences in {@link #getPath(int)}. Not <code>null</code>.
+     * @param controller the controller in whose realm this model is used
      */
-    public MergedPreferenceModel( PathCombiner combiner ){
+    public MergedPreferenceModel( PathCombiner combiner, DockController controller ){
+    	super( controller );
         if( combiner == null )
             throw new IllegalArgumentException( "combiner must not be null" );
         
@@ -226,6 +230,19 @@ public class MergedPreferenceModel extends AbstractPreferenceModel{
      */
     public PreferenceModel getModel( int index ){
         return models.get( index ).model;
+    }
+    
+    /**
+     * Gets the model which was stored using the key <code>path</code>.
+     * @param path the path of the model
+     * @return the model or <code>null</code> if not found
+     */
+    public PreferenceModel getModel( Path path ){
+    	int index = indexOf( path );
+    	if( index < 0 ){
+    		return null;
+    	}
+    	return getModel( index );
     }
     
     @Override

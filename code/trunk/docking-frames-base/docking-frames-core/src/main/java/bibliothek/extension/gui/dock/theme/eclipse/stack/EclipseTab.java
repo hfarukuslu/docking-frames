@@ -64,8 +64,10 @@ public class EclipseTab extends AbstractTab implements CombinedTab{
 		super( parent, dockable );
 		this.parent = parent;
 		this.component = delegate;
+		
 		component.setIcon( dockable.getTitleIcon() );
 		component.setText( dockable.getTitleText() );
+		component.setTab( this );
 	}
 	
 	@Override
@@ -151,6 +153,14 @@ public class EclipseTab extends AbstractTab implements CombinedTab{
 	}
 
 	public boolean isUsedAsTitle(){
+		return true;
+	}
+	
+	public boolean shouldFocus(){
+    	return true;
+    }
+	
+	public boolean shouldTransfersFocus(){
 		return true;
 	}
 

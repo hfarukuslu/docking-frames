@@ -49,6 +49,9 @@ import bibliothek.gui.dock.layout.DockableProperty;
 import bibliothek.gui.dock.layout.DockablePropertyFactory;
 import bibliothek.gui.dock.layout.PredefinedDockSituation;
 import bibliothek.gui.dock.layout.PropertyTransformer;
+import bibliothek.gui.dock.perspective.PerspectiveElement;
+import bibliothek.gui.dock.perspective.PredefinedMap;
+import bibliothek.gui.dock.perspective.PredefinedPerspective;
 import bibliothek.util.xml.XException;
 
 /**
@@ -104,7 +107,7 @@ public class DefaultLayoutChangeStrategy implements LayoutChangeStrategy{
 	 * Forwards to {@link #createSituation(DockFrontendInternals, boolean, boolean)} with the
 	 * last argument set to <code>false</code>.
 	 */
-	public DockSituation createSituation( DockFrontendInternals frontend, boolean entry ){
+	public PredefinedDockSituation createSituation( DockFrontendInternals frontend, boolean entry ){
         return createSituation( frontend, entry, false );
     }
     
@@ -121,7 +124,7 @@ public class DefaultLayoutChangeStrategy implements LayoutChangeStrategy{
      * may override and return other situations.
      */
     @SuppressWarnings("unchecked")
-    protected DockSituation createSituation( final DockFrontendInternals frontend, final boolean entry, boolean onSetLayout ){
+    protected PredefinedDockSituation createSituation( final DockFrontendInternals frontend, final boolean entry, boolean onSetLayout ){
         PredefinedDockSituation situation = new PredefinedDockSituation(){
             @Override
             protected boolean shouldLayout( DockElement element ) {
@@ -149,11 +152,11 @@ public class DefaultLayoutChangeStrategy implements LayoutChangeStrategy{
             situation.put( DockFrontend.ROOT_KEY_PREFIX + info.getName(), info.getStation() );
         }
         
-        for( DockFactory<?,?> factory : frontend.getDockFactories() ){
+        for( DockFactory<?,?,?> factory : frontend.getDockFactories() ){
             situation.add( factory );
         }
         
-        for( DockFactory<?,?> backup : frontend.getBackupDockFactories() ){
+        for( DockFactory<?,?,?> backup : frontend.getBackupDockFactories() ){
             situation.addBackup( new RegisteringDockFactory( frontend.getFrontend(), backup ) );
         }
         
@@ -167,6 +170,53 @@ public class DefaultLayoutChangeStrategy implements LayoutChangeStrategy{
         	situation.setIgnore( frontend.getFrontend().getIgnoreForFinal() );
         
         return situation;
+    }
+    
+    public PredefinedPerspective createPerspective( DockFrontendInternals frontend, boolean entry, final FrontendPerspectiveCache cache ){
+        PredefinedDockSituation situation = createSituation( frontend, entry );
+	    PredefinedPerspective perspective = situation.createPerspective();
+
+        for( DockInfo info : frontend.getDockables() ){
+            if( info.getDockable() != null ){
+            	PerspectiveElement element = cache.get( info.getKey(), info.getDockable(), false );
+            	perspective.put( DockFrontend.DOCKABLE_KEY_PREFIX + info.getKey(), element );
+            }
+        }
+        
+        for( RootInfo info : frontend.getRoots() ){
+        	PerspectiveElement element = cache.get( info.getName(), info.getStation(), true );
+        	perspective.put( DockFrontend.ROOT_KEY_PREFIX + info.getName(), element );
+        }
+        
+        perspective.put( new PredefinedMap(){
+			public PerspectiveElement get( String id ){
+				if( id.startsWith( DockFrontend.DOCKABLE_KEY_PREFIX )){
+					return cache.get( id.substring( DockFrontend.DOCKABLE_KEY_PREFIX.length() ), false );
+				}
+				else if( id.startsWith( DockFrontend.ROOT_KEY_PREFIX )){
+					return cache.get( id.substring( DockFrontend.ROOT_KEY_PREFIX.length() ), true );
+				}
+				else{
+					return null;
+				}
+			}
+			
+			public String get( PerspectiveElement element ){
+				String id = cache.get( element );
+				if( id == null ){
+					return null;
+				}
+				
+				if( element.asStation() != null && cache.isRootStation( element.asStation() )){
+					return DockFrontend.ROOT_KEY_PREFIX + id;
+				}
+				else{
+					return DockFrontend.DOCKABLE_KEY_PREFIX + id;
+				}
+			}
+		});
+
+        return perspective;
     }
     
     public PropertyTransformer createTransformer( DockFrontendInternals frontend ){

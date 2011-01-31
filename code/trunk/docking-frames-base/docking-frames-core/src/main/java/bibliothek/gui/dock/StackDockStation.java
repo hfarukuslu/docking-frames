@@ -26,11 +26,14 @@
 
 package bibliothek.gui.dock;
 
+import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Graphics;
 import java.awt.GridLayout;
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.awt.event.HierarchyEvent;
+import java.awt.event.HierarchyListener;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -54,12 +57,13 @@ import bibliothek.gui.dock.event.DockStationAdapter;
 import bibliothek.gui.dock.event.DockStationListener;
 import bibliothek.gui.dock.event.DockableListener;
 import bibliothek.gui.dock.layout.DockableProperty;
+import bibliothek.gui.dock.security.SecureContainer;
 import bibliothek.gui.dock.station.AbstractDockableStation;
 import bibliothek.gui.dock.station.DisplayerCollection;
 import bibliothek.gui.dock.station.DisplayerFactory;
 import bibliothek.gui.dock.station.DockableDisplayer;
 import bibliothek.gui.dock.station.DockableDisplayerListener;
-import bibliothek.gui.dock.station.OverpaintablePanel;
+import bibliothek.gui.dock.station.StationBackgroundComponent;
 import bibliothek.gui.dock.station.StationChildHandle;
 import bibliothek.gui.dock.station.StationPaint;
 import bibliothek.gui.dock.station.stack.DefaultStackDockComponent;
@@ -69,25 +73,28 @@ import bibliothek.gui.dock.station.stack.StackDockComponentParent;
 import bibliothek.gui.dock.station.stack.StackDockComponentRepresentative;
 import bibliothek.gui.dock.station.stack.StackDockProperty;
 import bibliothek.gui.dock.station.stack.StackDockStationFactory;
-import bibliothek.gui.dock.station.stack.TabContentFilterListener;
 import bibliothek.gui.dock.station.stack.TabContent;
+import bibliothek.gui.dock.station.stack.TabContentFilterListener;
 import bibliothek.gui.dock.station.stack.tab.TabContentFilter;
 import bibliothek.gui.dock.station.stack.tab.layouting.TabPlacement;
 import bibliothek.gui.dock.station.support.ConvertedPlaceholderListItem;
-import bibliothek.gui.dock.station.support.DisplayerFactoryWrapper;
+import bibliothek.gui.dock.station.support.DockablePlaceholderList;
 import bibliothek.gui.dock.station.support.DockableVisibilityManager;
-import bibliothek.gui.dock.station.support.PlaceholderList;
 import bibliothek.gui.dock.station.support.PlaceholderListItemAdapter;
 import bibliothek.gui.dock.station.support.PlaceholderListItemConverter;
 import bibliothek.gui.dock.station.support.PlaceholderMap;
 import bibliothek.gui.dock.station.support.PlaceholderStrategy;
-import bibliothek.gui.dock.station.support.StationPaintWrapper;
 import bibliothek.gui.dock.station.support.PlaceholderList.Filter;
 import bibliothek.gui.dock.station.support.PlaceholderList.Level;
+import bibliothek.gui.dock.themes.DefaultDisplayerFactoryValue;
+import bibliothek.gui.dock.themes.DefaultStationPaintValue;
+import bibliothek.gui.dock.themes.ThemeManager;
 import bibliothek.gui.dock.title.ControllerTitleFactory;
 import bibliothek.gui.dock.title.DockTitle;
 import bibliothek.gui.dock.title.DockTitleFactory;
 import bibliothek.gui.dock.title.DockTitleVersion;
+import bibliothek.gui.dock.util.BackgroundAlgorithm;
+import bibliothek.gui.dock.util.BackgroundPanel;
 import bibliothek.gui.dock.util.DockUtilities;
 import bibliothek.gui.dock.util.PropertyKey;
 import bibliothek.gui.dock.util.PropertyValue;
@@ -121,7 +128,7 @@ public class StackDockStation extends AbstractDockableStation implements StackDo
     	new PropertyKey<TabContentFilter>( "stack dock tab content filter" );
     
     /** A list of all children */
-    private PlaceholderList<StationChildHandle> dockables = new PlaceholderList<StationChildHandle>();
+    private DockablePlaceholderList<StationChildHandle> dockables = new DockablePlaceholderList<StationChildHandle>();
     
     /**
      * A list of {@link MouseInputListener MouseInputListeners} which are
@@ -133,10 +140,10 @@ public class StackDockStation extends AbstractDockableStation implements StackDo
     private DockableVisibilityManager visibility;
     
     /** A paint to draw lines */
-    private StationPaintWrapper paint = new StationPaintWrapper();
+    private DefaultStationPaintValue paint;
     
     /** A factory to create {@link DockableDisplayer} */
-    private DisplayerFactoryWrapper displayerFactory = new DisplayerFactoryWrapper();
+    private DefaultDisplayerFactoryValue displayerFactory;
     
     /** The set of displayers shown on this station */
     private DisplayerCollection displayers;
@@ -155,6 +162,9 @@ public class StackDockStation extends AbstractDockableStation implements StackDo
     
     /** The panel where components are added */
     private JComponent panel;
+    
+    /** The background of the {@link #panel} */
+    private PanelBackground panelBackground = new PanelBackground();
     
     /** A Component which shows two or more children of this station */
     private StackDockComponent stackComponent;
@@ -273,6 +283,9 @@ public class StackDockStation extends AbstractDockableStation implements StackDo
      * Initializes the fields of this object, has to be called exactly once.
      */
     protected void init(){
+    	paint = new DefaultStationPaintValue( ThemeManager.STATION_PAINT + ".stack", this );
+    	displayerFactory = new DefaultDisplayerFactoryValue( ThemeManager.DISPLAYER_FACTORY + ".stack", this );
+    	
         visibleListener = new VisibleListener();
         visibility = new DockableVisibilityManager( listeners );
         
@@ -284,6 +297,7 @@ public class StackDockStation extends AbstractDockableStation implements StackDo
         });
         
         background = createBackground();
+        background.setController( getController() );
         panel = background.getContentPane();
         
         stackComponentFactory = new PropertyValue<StackDockComponentFactory>( COMPONENT_FACTORY ){
@@ -317,6 +331,18 @@ public class StackDockStation extends AbstractDockableStation implements StackDo
         	public void dockableSelected( DockStation station, Dockable oldSelection, Dockable newSelection ){
         		lastSelectedDockable = newSelection;
         	}
+		});
+        
+		panel.addHierarchyListener( new HierarchyListener(){
+			public void hierarchyChanged( HierarchyEvent e ){
+				if( (e.getChangeFlags() & HierarchyEvent.SHOWING_CHANGED) != 0 ){
+					if( getDockParent() == null ){
+						getDockableStateListeners().checkVisibility();
+					}
+					
+					visibility.fire();
+				}
+			}
 		});
     }
     
@@ -510,6 +536,7 @@ public class StackDockStation extends AbstractDockableStation implements StackDo
             
             boolean wasNull = getController() == null;
             
+            background.setController( controller );
             stackComponentFactory.setProperties( controller );
             super.setController(controller);
             stackComponent.setController( controller );
@@ -517,6 +544,10 @@ public class StackDockStation extends AbstractDockableStation implements StackDo
             placeholderStrategy.setProperties( controller );
             tabContentFilter.setProperties( controller );
             stackComponentRepresentative.setController( controller );
+            paint.setController( controller );
+            displayerFactory.setController( controller );
+            
+            panelBackground.setController( controller );
             
             if( controller != null ){
                 title = controller.getDockTitleManager().getVersion( TITLE_ID, ControllerTitleFactory.INSTANCE );
@@ -540,27 +571,29 @@ public class StackDockStation extends AbstractDockableStation implements StackDo
             for( StationChildHandle handle : dockables.dockables() ){
             	handle.setTitleRequest( title, true );
             }
+            
+            visibility.fire();
         }
     }
     
     /**
      * Gets a {@link StationPaint} which is used to paint some lines onto
-     * this station. Use a {@link StationPaintWrapper#setDelegate(StationPaint) delegate}
+     * this station. Use a {@link DefaultStationPaintValue#setDelegate(StationPaint) delegate}
      * to exchange the paint.
      * @return the paint
      */
-    public StationPaintWrapper getPaint() {
+    public DefaultStationPaintValue getPaint() {
         return paint;
     }
    
     /**
      * Gets a {@link DisplayerFactory} which is used to create new
      * {@link DockableDisplayer} for this station. Use a 
-     * {@link DisplayerFactoryWrapper#setDelegate(DisplayerFactory) delegate}
+     * {@link DefaultDisplayerFactoryValue#setDelegate(DisplayerFactory) delegate}
      * to exchange the factory.
      * @return the factory
      */
-    public DisplayerFactoryWrapper getDisplayerFactory() {
+    public DefaultDisplayerFactoryValue getDisplayerFactory() {
         return displayerFactory;
     }
     
@@ -666,7 +699,7 @@ public class StackDockStation extends AbstractDockableStation implements StackDo
     		throw new IllegalStateException( "there are children on this station" );
     	}
     	try{
-    		PlaceholderList<StationChildHandle> next = new PlaceholderList<StationChildHandle>( placeholders );
+    		DockablePlaceholderList<StationChildHandle> next = new DockablePlaceholderList<StationChildHandle>( placeholders );
     		if( getController() != null ){
     			dockables.setStrategy( null );
     			dockables.unbind();
@@ -700,7 +733,7 @@ public class StackDockStation extends AbstractDockableStation implements StackDo
     	
     	final PlaceholderStrategy strategy = getPlaceholderStrategy();
     	
-    	return dockables.toMap( new PlaceholderListItemAdapter<StationChildHandle>() {
+    	return dockables.toMap( new PlaceholderListItemAdapter<Dockable, StationChildHandle>() {
     		@Override
     		public ConvertedPlaceholderListItem convert( int index, StationChildHandle dockable ){
     			ConvertedPlaceholderListItem item = new ConvertedPlaceholderListItem();
@@ -734,44 +767,59 @@ public class StackDockStation extends AbstractDockableStation implements StackDo
     		throw new IllegalStateException( "there are children on this station" );
     	}
     	
-    	dockables.setStrategy( null );
-		dockables.unbind();
-		PlaceholderList<StationChildHandle> next = new PlaceholderList<StationChildHandle>();
+    	DockController controller = getController();
     	
-    	dockables = next;
-    	next.read( placeholders, new PlaceholderListItemAdapter<StationChildHandle>() {
-    		private int size = 0;
-    		
-    		@Override
-    		public StationChildHandle convert( ConvertedPlaceholderListItem item ){
-    			int id = item.getInt( "id" );
-    			Dockable dockable = children.get( id );
-    			if( dockable == null ){
-    				return null;
-    			}
-    			
-    			listeners.fireDockableAdding( dockable );
-    			dockable.addDockableListener( listener );
-    			StationChildHandle handle = new StationChildHandle( StackDockStation.this, getDisplayers(), dockable, title );
-    			
-    			return handle;
+    	try{
+    		if( controller != null ){
+    			controller.freezeLayout();
     		}
     		
-    		@Override
-    		public void added( StationChildHandle handle ){
-    			Dockable dockable = handle.getDockable();
-    			dockable.setDockParent( StackDockStation.this );
-    			handle.updateDisplayer();
-    			addToPanel( handle, size, size );
-    			size++;
-    			listeners.fireDockableAdded( dockable );
+	    	dockables.setStrategy( null );
+			dockables.unbind();
+			DockablePlaceholderList<StationChildHandle> next = new DockablePlaceholderList<StationChildHandle>();
+	    	
+	    	dockables = next;
+	    	next.read( placeholders, new PlaceholderListItemAdapter<Dockable, StationChildHandle>() {
+	    		private int size = 0;
+	    		
+	    		@Override
+	    		public StationChildHandle convert( ConvertedPlaceholderListItem item ){
+	    			int id = item.getInt( "id" );
+	    			Dockable dockable = children.get( id );
+	    			if( dockable == null ){
+	    				return null;
+	    			}
+	    			
+	    			DockUtilities.ensureTreeValidity( StackDockStation.this, dockable );
+	    			
+	    			listeners.fireDockableAdding( dockable );
+	    			dockable.addDockableListener( listener );
+	    			StationChildHandle handle = new StationChildHandle( StackDockStation.this, getDisplayers(), dockable, title );
+	    			
+	    			return handle;
+	    		}
+	    		
+	    		@Override
+	    		public void added( StationChildHandle handle ){
+	    			Dockable dockable = handle.getDockable();
+	    			dockable.setDockParent( StackDockStation.this );
+	    			handle.updateDisplayer();
+	    			addToPanel( handle, size, size );
+	    			size++;
+	    			listeners.fireDockableAdded( dockable );
+	    		}
+			});
+	    	
+			if( controller != null ){
+				dockables.bind();
+				dockables.setStrategy( getPlaceholderStrategy() );
+			}
+    	}
+    	finally{
+    		if( controller != null ){
+    			controller.meltLayout();
     		}
-		});
-    	
-		if( getController() != null ){
-			dockables.bind();
-			dockables.setStrategy( getPlaceholderStrategy() );
-		}
+    	}
     }
 
     /**
@@ -827,9 +875,7 @@ public class StackDockStation extends AbstractDockableStation implements StackDo
     }
 
     public void drop(){
-    	listeners.fireDockableAdding( dropping );
-        add( dropping, insert.tab + (insert.right ? 1 : 0), null, false );
-        listeners.fireDockableAdded( dropping );
+        add( dropping, insert.tab + (insert.right ? 1 : 0), null );
     }
 
     public void drop( Dockable dockable ) {
@@ -853,9 +899,7 @@ public class StackDockStation extends AbstractDockableStation implements StackDo
     		done = drop( dockable, new StackDockProperty( dockables.dockables().size(), placeholder ) );
     	}
     	if( !done ){
-    		listeners.fireDockableAdding( dockable );
-        	add( dockable, dockables.dockables().size(), null, false );
-        	listeners.fireDockableAdded( dockable );
+    		add( dockable, dockables.dockables().size(), null );
     	}
     }
     
@@ -899,7 +943,7 @@ public class StackDockStation extends AbstractDockableStation implements StackDo
         }
         else if( placeholder != null ){
         	if( acceptable && dockables.hasPlaceholder( placeholder )){
-        		add( dockable, 0, placeholder, true );
+        		add( dockable, 0, placeholder );
         		result = true;
         	}
         }
@@ -998,6 +1042,7 @@ public class StackDockStation extends AbstractDockableStation implements StackDo
             
             int destination = ((StackDockProperty)property).getIndex();
             destination = Math.min( destination, getDockableCount()-1 );
+            destination = Math.max( 0, destination );
             move( index, destination );
         }
     }
@@ -1006,6 +1051,8 @@ public class StackDockStation extends AbstractDockableStation implements StackDo
     	if( source != destination ){
     		dockables.dockables().move( source, destination );
     		stackComponent.moveTab( source, destination );
+    		
+    		fireDockablesRepositioned( Math.min( source, destination ), Math.max( source, destination ) );
     	}
     }
     
@@ -1086,9 +1133,7 @@ public class StackDockStation extends AbstractDockableStation implements StackDo
         if( index < 0 )
             throw new IllegalArgumentException( "The dockable is not part of this station." );
         
-        listeners.fireDockableRemoving( dockable );
-        remove( index, false );
-        listeners.fireDockableRemoved( dockable );
+        remove( index );
     }
     
     public boolean canReplace( Dockable old, Dockable next ) {
@@ -1112,10 +1157,10 @@ public class StackDockStation extends AbstractDockableStation implements StackDo
     		int index = indexOf( old );
     		
     		int listIndex = dockables.levelToBase( index, Level.DOCKABLE );
-    		PlaceholderList<StationChildHandle>.Item oldItem = dockables.list().get( listIndex );
+    		DockablePlaceholderList<StationChildHandle>.Item oldItem = dockables.list().get( listIndex );
     		remove( index );
     		add( next, index );
-    		PlaceholderList<StationChildHandle>.Item newItem = dockables.list().get( listIndex );
+    		DockablePlaceholderList<StationChildHandle>.Item newItem = dockables.list().get( listIndex );
     		if( station ){
     			newItem.setPlaceholderMap( old.asDockStation().getPlaceholders() );
     		}
@@ -1137,7 +1182,7 @@ public class StackDockStation extends AbstractDockableStation implements StackDo
      * @param index the preferred location of the new child
      */
     public void add( Dockable dockable, int index ){
-        add( dockable, index, null, true );
+        add( dockable, index, null );
     }
     
     /**
@@ -1145,15 +1190,12 @@ public class StackDockStation extends AbstractDockableStation implements StackDo
      * @param dockable the new child
      * @param index the preferred location of the new child
      * @param placeholder the preferred location of the new child, can be <code>null</code>
-     * @param fire if <code>true</code> the method should fire events for
-     * adding a new {@link Dockable}, otherwise the method will run silently
      */
-    protected void add( Dockable dockable, int index, Path placeholder, boolean fire ){
+    protected void add( Dockable dockable, int index, Path placeholder ){
         DockUtilities.ensureTreeValidity( this, dockable );
         
-        if( fire ){
-        	listeners.fireDockableAdding( dockable );
-        }
+        listeners.fireDockableAdding( dockable );
+        
         dockable.setDockParent( this );
         
         StationChildHandle handle = new StationChildHandle( this, getDisplayers(), dockable, title );
@@ -1171,10 +1213,8 @@ public class StackDockStation extends AbstractDockableStation implements StackDo
         
         dockable.addDockableListener( listener );
         
-        if( fire ){
-        	listeners.fireDockableAdded( dockable );
-        }
-        
+        listeners.fireDockableAdded( dockable );
+        fireDockablesRepositioned( index+1 );
         fireDockableSelected();
     }
     
@@ -1278,24 +1318,13 @@ public class StackDockStation extends AbstractDockableStation implements StackDo
      * @param index the location of the child which will be removed
      */
     public void remove( int index ){
-        remove( index, true );
-    }
-
-    /**
-     * Removes the child of location <code>index</code>.
-     * @param index the location of the child which will be removed
-     * @param fire <code>true</code> if the method should fire some events,
-     * <code>false</code> if the method should run silently
-     */
-    private void remove( int index, boolean fire ){
         if( index < 0 || index >= dockables.dockables().size() )
             throw new IllegalArgumentException( "Index out of bounds" );
         
         StationChildHandle handle = dockables.dockables().get( index );
         Dockable dockable = handle.getDockable();
         
-        if( fire )
-        	listeners.fireDockableRemoving( dockable );
+       	listeners.fireDockableRemoving( dockable );
         
         if( dockables.dockables().size() == 1 ){
         	if( singleTabStackDockComponent() ){
@@ -1324,9 +1353,8 @@ public class StackDockStation extends AbstractDockableStation implements StackDo
         panel.revalidate();
         
         dockable.setDockParent( null );
-        if( fire )
-        	listeners.fireDockableRemoved( dockable );
-        
+       	listeners.fireDockableRemoved( dockable );
+        fireDockablesRepositioned( index );
         fireDockableSelected();
     }
 
@@ -1419,7 +1447,7 @@ public class StackDockStation extends AbstractDockableStation implements StackDo
             if( controller != null ){
                 Dockable selection = getFrontDockable();
                 if( selection != null )
-                    controller.setFocusedDockable( selection, false );
+                    controller.setFocusedDockable( selection, null, false );
                 
                 fireDockableSelected();
             }
@@ -1475,17 +1503,27 @@ public class StackDockStation extends AbstractDockableStation implements StackDo
      * have this panel as parent too.
      * @author Benjamin Sigg
      */
-    protected class Background extends OverpaintablePanel{
+    protected class Background extends SecureContainer{
+    	private BackgroundPanel content;
+    	
     	/**
     	 * Creates a new panel
     	 */
         public Background(){
-            getContentPane().setLayout( new GridLayout( 1, 1 ));
+        	content = new BackgroundPanel( true, false );
+        	content.setBackground( panelBackground );
+        	
+        	setContentPane( content );
+        	
+            content.setLayout( new GridLayout( 1, 1 ));
+            getBasePane().removeAll();
+            getBasePane().setLayout( new BorderLayout() );
+            getBasePane().add( content, BorderLayout.CENTER );
         }
         
         @Override
         protected void paintOverlay( Graphics g ) {
-            StationPaint paint = getPaint();
+            DefaultStationPaintValue paint = getPaint();
             
             if( draw && dockables.dockables().size() > 1 && insert != null ){
                 Rectangle bounds = null;
@@ -1504,7 +1542,7 @@ public class StackDockStation extends AbstractDockableStation implements StackDo
                    		insertionLine( insert.tab > 0 ? stackComponent.getBoundsAt( insert.tab-1 ) : null, bounds, a, b, false );
                     }
                     
-                    paint.drawInsertionLine( g, StackDockStation.this, a.x, a.y, b.x, b.y );
+                    paint.drawInsertionLine( g, a.x, a.y, b.x, b.y );
                 }
             }
             
@@ -1524,7 +1562,7 @@ public class StackDockStation extends AbstractDockableStation implements StackDo
                 }
                 
                 if( insert != null ){
-                	paint.drawInsertion( g, StackDockStation.this, bounds, insert );
+                	paint.drawInsertion( g, bounds, insert );
                 }
             }
         }
@@ -1649,5 +1687,26 @@ public class StackDockStation extends AbstractDockableStation implements StackDo
         public boolean isRight(){
 			return right;
 		}
+    }
+    
+    /**
+     * The algorithm that paints the background of this station.
+     * @author Benjamin Sigg
+     */
+    private class PanelBackground extends BackgroundAlgorithm implements StationBackgroundComponent{
+    	/**
+     	 * Creates a new algorithm.
+     	 */
+     	public PanelBackground(){
+     		super( StationBackgroundComponent.KIND, ThemeManager.BACKGROUND_PAINT + ".station.stack" );
+     	}
+     	
+     	public Component getComponent(){
+     		return StackDockStation.this.getComponent();
+     	}
+     	
+     	public DockStation getStation(){
+     		return StackDockStation.this;
+     	}
     }
 }

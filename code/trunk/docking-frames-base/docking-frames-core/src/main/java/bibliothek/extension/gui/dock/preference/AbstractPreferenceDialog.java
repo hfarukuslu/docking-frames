@@ -36,6 +36,8 @@ import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.AbstractAction;
 import javax.swing.JButton;
@@ -44,11 +46,16 @@ import javax.swing.JDialog;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
-import bibliothek.gui.DockUI;
+import bibliothek.gui.dock.util.text.DialogText;
+import bibliothek.gui.dock.util.text.SwingActionText;
+import bibliothek.gui.dock.util.text.TextValue;
 
 /**
  * An abstract dialog used to show the content of some {@link PreferenceModel}. The
- * exact graphical user interface for the model depends on the subclass.
+ * exact graphical user interface for the model depends on the subclass.<br>
+ * <b>Note: </b> clients using this panel have to call {@link #destroy()}. The only time {@link #destroy()} has
+ * not to be called is if the dialog was shown using {@link #openDialog(Component, boolean)} and {@link #isDestroyOnClose() destroyOnClose}
+ * was set to <code>true</code>.
  * @author Benjamin Sigg
  *
  * @param <M> What kind of model this dialog can show
@@ -57,20 +64,30 @@ public abstract class AbstractPreferenceDialog<M extends PreferenceModel> extend
     private M model;
     private JComponent content;
     private JDialog dialog;
+    private boolean destroyOnClose;
+    
+    /** various texts that are used by this dialog */
+    private List<TextValue> texts = new ArrayList<TextValue>();
     
     /**
      * Creates a new dialog.
+     * @param destroyOnClose if set to <code>true</code>, then {@link #destroy()} is automatically called
+     * if {@link #close()} is called. Clients have to call {@link #destroy()} manually if they are not
+     * using {@link #openDialog(Component, boolean)}.
      */
-    public AbstractPreferenceDialog(){
-        this( null );
+    public AbstractPreferenceDialog( boolean destroyOnClose ){
+        this( null, destroyOnClose );
     }
     
     /**
      * Creates a new dialog using the given model.
      * @param model the model to use
+     * @param destroyOnClose if set to <code>true</code>, then {@link #destroy()} is automatically called
+     * if {@link #close()} is called. Clients have to call {@link #destroy()} manually if they are not
+     * using {@link #openDialog(Component, boolean)}.
      */
-    public AbstractPreferenceDialog( M model ){
-        init( model );
+    public AbstractPreferenceDialog( M model, boolean destroyOnClose ){
+        init( model, destroyOnClose );
     }
     
     /**
@@ -78,26 +95,32 @@ public abstract class AbstractPreferenceDialog<M extends PreferenceModel> extend
      * call {@link #init(PreferenceModel)} to finish constructing this dialog.
      * @param init whether to call {@link #init(PreferenceModel)}.
      * @param model the model to use, can be <code>null</code>
+     * @param destroyOnClose if set to <code>true</code>, then {@link #destroy()} is automatically called
+     * if {@link #close()} is called. Clients have to call {@link #destroy()} manually if they are not
+     * using {@link #openDialog(Component, boolean)}.
      */
-    protected AbstractPreferenceDialog( boolean init, M model ){
+    protected AbstractPreferenceDialog( boolean init, M model, boolean destroyOnClose ){
     	if( init ){
-    		init( null );
+    		init( model, destroyOnClose );
     	}
     }
     
     /**
      * Creates the contents of this dialog.
      * @param model the model to use, can be <code>null</code>
+     * @param destroyOnClose if set to <code>true</code>, then {@link #destroy()} is automatically called
+     * if {@link #close()} is called. Clients have to call {@link #destroy()} manually if they are not
+     * using {@link #openDialog(Component, boolean)}.
      */
-    protected void init( M model ){
+    protected void init( M model, boolean destroyOnClose ){
     	if( content != null )
     		throw new IllegalStateException( "Already initialized" );
     	
     	setLayout( new GridBagLayout() );
     	this.model = model;
+    	this.destroyOnClose = destroyOnClose;
         
         content = getContent();
-        setModelForContent( model );
         
         JPanel buttons = new JPanel( new GridLayout( 1, 4 ));
         buttons.add( new JButton( new ApplyAction() ));
@@ -112,6 +135,8 @@ public abstract class AbstractPreferenceDialog<M extends PreferenceModel> extend
         add( buttons, new GridBagConstraints( 0, 1, 1, 1, 1.0, 1.0,
                 GridBagConstraints.LAST_LINE_END, GridBagConstraints.NONE,
                 new Insets( 1, 1, 1, 1 ), 0, 0 ) );
+        
+        setModel( model );
     }
     
     /**
@@ -135,6 +160,18 @@ public abstract class AbstractPreferenceDialog<M extends PreferenceModel> extend
      */
     public void setModel( M model ){
         this.model = model;
+        
+        if( model == null ){
+        	for( TextValue text : texts ){
+        		text.setManager( null );
+        	}
+        }
+        else{
+        	for( TextValue text : texts ){
+        		text.setManager( model.getController().getTexts() );
+        	}
+        }
+        
         setModelForContent( model );
     }
     
@@ -188,12 +225,29 @@ public abstract class AbstractPreferenceDialog<M extends PreferenceModel> extend
             }
         }
         
-        dialog.setTitle( DockUI.getDefaultDockUI().getString( "preference.dialog.title" ) );
+        final DialogText title = new DialogText( "preference.dialog.title", dialog ){
+			protected void changed( String oldValue, String newValue ){
+				getDialog().setTitle( newValue );
+			}
+		};
+        
         dialog.setDefaultCloseOperation( JDialog.DO_NOTHING_ON_CLOSE );
         dialog.addWindowListener( new WindowAdapter(){
             @Override
             public void windowClosing( WindowEvent e ) {
                 doCancel();
+            }
+            @Override
+            public void windowClosed( WindowEvent e ){
+            	texts.remove( title );
+            	title.setController( null );
+            }
+            @Override
+            public void windowOpened( WindowEvent e ){
+            	texts.add( title );
+            	if( model != null ){
+            		title.setController( model.getController() );
+            	}
             }
         });
         return dialog;
@@ -238,12 +292,41 @@ public abstract class AbstractPreferenceDialog<M extends PreferenceModel> extend
             dialog.remove( this );
             dialog = null;
         }
+    	if( destroyOnClose ){
+    		destroy();
+    	}
     }
+    
+    /**
+     * Allows this dialog to free any resources that it used. Should be called once this dialog is no longer
+     * used, otherwise memory leaks can appear.
+     */
+    public void destroy(){
+    	setModel( null );
+    }
+    
+    /**
+     * Tells whether {@link #destroy()} is called automatically or not.
+     * @return whether to free resources
+     * @see #setDestroyOnClose(boolean)
+     */
+    public boolean isDestroyOnClose(){
+		return destroyOnClose;
+	}
+    
+    /**
+     * If set to <code>true</code> then {@link #destroy()} is automatically called if this dialog is
+     * {@link #close() closed}
+     * @param destroyOnClose whether to free resources
+     */
+    public void setDestroyOnClose( boolean destroyOnClose ){
+		this.destroyOnClose = destroyOnClose;
+	}
     
     private class OkAction extends AbstractAction{
         public OkAction(){
-            putValue( NAME, DockUI.getDefaultDockUI().getString( "preference.dialog.ok.text" ) );
-            putValue( SHORT_DESCRIPTION, DockUI.getDefaultDockUI().getString( "preference.dialog.ok.description" ) );
+        	texts.add( new SwingActionText( "preference.dialog.ok.text", NAME, this ) );
+        	texts.add( new SwingActionText( "preference.dialog.ok.description", SHORT_DESCRIPTION, this ) );
         }
         
         public void actionPerformed( ActionEvent e ) {
@@ -253,8 +336,8 @@ public abstract class AbstractPreferenceDialog<M extends PreferenceModel> extend
     
     private class ApplyAction extends AbstractAction{
         public ApplyAction(){
-            putValue( NAME, DockUI.getDefaultDockUI().getString( "preference.dialog.apply.text" ) );
-            putValue( SHORT_DESCRIPTION, DockUI.getDefaultDockUI().getString( "preference.dialog.apply.description" ) );
+        	texts.add( new SwingActionText( "preference.dialog.apply.text", NAME, this ) );
+        	texts.add( new SwingActionText( "preference.dialog.apply.description", SHORT_DESCRIPTION, this ) );
         }
         
         public void actionPerformed( ActionEvent e ) {
@@ -264,8 +347,8 @@ public abstract class AbstractPreferenceDialog<M extends PreferenceModel> extend
     
     private class CancelAction extends AbstractAction{
         public CancelAction(){
-            putValue( NAME, DockUI.getDefaultDockUI().getString( "preference.dialog.cancel.text" ) );
-            putValue( SHORT_DESCRIPTION, DockUI.getDefaultDockUI().getString( "preference.dialog.cancel.description" ) );
+        	texts.add( new SwingActionText( "preference.dialog.cancel.text", NAME, this ) );
+        	texts.add( new SwingActionText( "preference.dialog.cancel.description", SHORT_DESCRIPTION, this ) );
         }
         
         public void actionPerformed( ActionEvent e ) {
@@ -275,8 +358,8 @@ public abstract class AbstractPreferenceDialog<M extends PreferenceModel> extend
     
     private class ResetAction extends AbstractAction{
         public ResetAction(){
-            putValue( NAME, DockUI.getDefaultDockUI().getString( "preference.dialog.reset.text" ) );
-            putValue( SHORT_DESCRIPTION, DockUI.getDefaultDockUI().getString( "preference.dialog.reset.description" ) );
+        	texts.add( new SwingActionText( "preference.dialog.reset.text", NAME, this ) );
+        	texts.add( new SwingActionText( "preference.dialog.reset.description", SHORT_DESCRIPTION, this ) );
         }
         
         public void actionPerformed( ActionEvent e ) {

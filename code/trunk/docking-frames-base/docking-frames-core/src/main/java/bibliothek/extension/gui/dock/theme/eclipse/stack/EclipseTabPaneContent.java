@@ -27,6 +27,8 @@ package bibliothek.extension.gui.dock.theme.eclipse.stack;
 
 import java.awt.Graphics;
 
+import javax.swing.border.Border;
+
 import bibliothek.extension.gui.dock.theme.eclipse.stack.tab.TabPanePainter;
 import bibliothek.gui.dock.station.stack.CombinedStackDockContentPane;
 
@@ -40,6 +42,7 @@ public class EclipseTabPaneContent extends CombinedStackDockContentPane{
 	public EclipseTabPaneContent( EclipseTabPane pane ){
 		super( pane );
 		this.pane = pane;
+		setPaintBackground( false );
 	}
 	
 	/**
@@ -51,18 +54,23 @@ public class EclipseTabPaneContent extends CombinedStackDockContentPane{
 	}
 	
 	@Override
-	public void paint( Graphics g ){
-		TabPanePainter painter = pane.getPainter();
-		if( painter != null ){
-			painter.paintBackground( g );
-		}
-		
-		super.paint( g );
+	public void paintBackground( Graphics g ){
+		getPane().getPainter().paintBackground( g );
+	}
 	
-		if( painter != null ){
-			painter.paintForeground( g );
-		}
+	@Override
+	public void paintBorder( Graphics g ){
+		// ignore
+	}
+	
+	@Override
+	public void paintOverlay( Graphics g ){
+		TabPanePainter painter = getPane().getPainter();
+		painter.paintForeground( g );
 		
-		paintBorder( g );
+		Border border = getBorder();
+		if( border != null ){
+			border.paintBorder( this, g, 0, 0, getWidth(), getHeight() );
+		}
 	}
 }

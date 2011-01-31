@@ -73,19 +73,20 @@ import bibliothek.gui.dock.station.screen.ScreenFullscreenAction;
 import bibliothek.gui.dock.station.support.CombinerSource;
 import bibliothek.gui.dock.station.support.CombinerSourceWrapper;
 import bibliothek.gui.dock.station.support.CombinerTarget;
-import bibliothek.gui.dock.station.support.CombinerWrapper;
 import bibliothek.gui.dock.station.support.ConvertedPlaceholderListItem;
-import bibliothek.gui.dock.station.support.DisplayerFactoryWrapper;
+import bibliothek.gui.dock.station.support.DockablePlaceholderList;
 import bibliothek.gui.dock.station.support.DockableVisibilityManager;
-import bibliothek.gui.dock.station.support.PlaceholderList;
 import bibliothek.gui.dock.station.support.PlaceholderListItemAdapter;
 import bibliothek.gui.dock.station.support.PlaceholderListItemConverter;
 import bibliothek.gui.dock.station.support.PlaceholderMap;
 import bibliothek.gui.dock.station.support.PlaceholderMetaMap;
 import bibliothek.gui.dock.station.support.PlaceholderStrategy;
-import bibliothek.gui.dock.station.support.StationPaintWrapper;
 import bibliothek.gui.dock.station.support.PlaceholderList.Filter;
 import bibliothek.gui.dock.station.support.PlaceholderList.Level;
+import bibliothek.gui.dock.themes.DefaultCombinerValue;
+import bibliothek.gui.dock.themes.DefaultDisplayerFactoryValue;
+import bibliothek.gui.dock.themes.DefaultStationPaintValue;
+import bibliothek.gui.dock.themes.ThemeManager;
 import bibliothek.gui.dock.title.ControllerTitleFactory;
 import bibliothek.gui.dock.title.DockTitle;
 import bibliothek.gui.dock.title.DockTitleVersion;
@@ -114,7 +115,7 @@ public class ScreenDockStation extends AbstractDockStation {
     /** a key for a property telling which boundaries a {@link ScreenDockWindow} can have */
     public static final PropertyKey<BoundaryRestriction> BOUNDARY_RESTRICTION = 
         new PropertyKey<BoundaryRestriction>( "ScreenDockStation.boundary_restriction",
-        		new ConstantPropertyFactory<BoundaryRestriction>( BoundaryRestriction.FREE ), true );
+        		new ConstantPropertyFactory<BoundaryRestriction>( BoundaryRestriction.MEDIUM ), true );
     
     /** a key for a property telling how to create new windows */
     public static final PropertyKey<ScreenDockWindowFactory> WINDOW_FACTORY =
@@ -141,8 +142,7 @@ public class ScreenDockStation extends AbstractDockStation {
     private boolean showing = false;
     
     /** A list of all windows that are used by this station */
-    // private List<ScreenDockWindow> dockables = new ArrayList<ScreenDockWindow>();
-    private PlaceholderList<ScreenDockWindowHandle> dockables = new PlaceholderList<ScreenDockWindowHandle>();
+    private DockablePlaceholderList<ScreenDockWindowHandle> dockables = new DockablePlaceholderList<ScreenDockWindowHandle>();
     
     /** All listeners that were added to this station */
     private List<ScreenDockStationListener> screenDockStationListeners = new ArrayList<ScreenDockStationListener>();
@@ -151,7 +151,7 @@ public class ScreenDockStation extends AbstractDockStation {
     private DockTitleVersion version;
     
     /** Combiner to merge some {@link Dockable Dockables} */
-    private CombinerWrapper combiner = new CombinerWrapper();
+    private DefaultCombinerValue combiner;
     
     /** Information about the current movement of a {@link Dockable} */
     private DropInfo dropInfo;
@@ -160,10 +160,10 @@ public class ScreenDockStation extends AbstractDockStation {
     private WindowProvider owner;
     
     /** The paint used to draw information on this station */
-    private StationPaintWrapper stationPaint = new StationPaintWrapper();
+    private DefaultStationPaintValue stationPaint;
     
     /** A factory to create new {@link DockableDisplayer}*/
-    private DisplayerFactoryWrapper displayerFactory = new DisplayerFactoryWrapper();
+    private DefaultDisplayerFactoryValue displayerFactory;
     
     /** The set of {@link DockableDisplayer} used on this station */
     private DisplayerCollection displayers;
@@ -260,18 +260,17 @@ public class ScreenDockStation extends AbstractDockStation {
 		}
 		
 		public boolean process( Dockable dockable, MouseEvent event ){
-			if( dockable != ScreenDockStation.this ){
-				DockStation parent = dockable.getDockParent();
-				while( parent != null && parent != ScreenDockStation.this ){
-					dockable = parent.asDockable();
-					parent = dockable == null ? null : dockable.getDockParent();
-				}
-				if( parent == ScreenDockStation.this ){
-					boolean state = isFullscreen( dockable );
-					setFullscreen( dockable, !state );
-					return true;
-				}
+			DockStation parent = dockable.getDockParent();
+			while( parent != null && parent != ScreenDockStation.this ){
+				dockable = parent.asDockable();
+				parent = dockable == null ? null : dockable.getDockParent();
 			}
+			if( parent == ScreenDockStation.this ){
+				boolean state = isFullscreen( dockable );
+				setFullscreen( dockable, !state );
+				return true;
+			}
+			
 			return false;
 		}
 	};
@@ -304,8 +303,13 @@ public class ScreenDockStation extends AbstractDockStation {
         visibility = new DockableVisibilityManager( listeners );
         this.owner = owner;
         
+        displayerFactory = new DefaultDisplayerFactoryValue( ThemeManager.DISPLAYER_FACTORY + ".screen", this );
+        combiner = new DefaultCombinerValue( ThemeManager.COMBINER + ".screen", this );
+        
         displayers = new DisplayerCollection( this, displayerFactory );
         fullscreenAction = createFullscreenAction();
+        
+        stationPaint = new DefaultStationPaintValue( ThemeManager.STATION_PAINT + ".screen", this );
         
         addScreenDockStationListener( new FullscreenListener() );
     }
@@ -398,9 +402,9 @@ public class ScreenDockStation extends AbstractDockStation {
      * Gets the {@link DisplayerFactory} that is used by this station
      * to create an underground for its children.
      * @return the factory
-     * @see DisplayerFactoryWrapper#setDelegate(DisplayerFactory)
+     * @see DefaultDisplayerFactoryValue#setDelegate(DisplayerFactory)
      */
-    public DisplayerFactoryWrapper getDisplayerFactory() {
+    public DefaultDisplayerFactoryValue getDisplayerFactory() {
         return displayerFactory;
     }
     
@@ -417,9 +421,9 @@ public class ScreenDockStation extends AbstractDockStation {
      * Gets the {@link Combiner} that is used to merge two {@link Dockable Dockables}
      * on this station.
      * @return the combiner
-     * @see CombinerWrapper#setDelegate(Combiner)
+     * @see DefaultCombinerValue#setDelegate(Combiner)
      */
-    public CombinerWrapper getCombiner() {
+    public DefaultCombinerValue getCombiner() {
         return combiner;
     }
     
@@ -428,9 +432,9 @@ public class ScreenDockStation extends AbstractDockStation {
      * paint information on this station, when a {@link Dockable} is dragged
      * or moved.
      * @return the paint
-     * @see StationPaintWrapper#setDelegate(StationPaint)
+     * @see DefaultStationPaintValue#setDelegate(StationPaint)
      */
-    public StationPaintWrapper getPaint() {
+    public DefaultStationPaintValue getPaint() {
         return stationPaint;
     }
     
@@ -460,6 +464,10 @@ public class ScreenDockStation extends AbstractDockStation {
             }
             dockables.bind();
         }
+        
+        stationPaint.setController( controller );
+        combiner.setController( controller );
+        displayerFactory.setController( controller );
         
         restriction.setProperties( controller );
         windowFactory.setProperties( controller );
@@ -523,7 +531,7 @@ public class ScreenDockStation extends AbstractDockStation {
     public PlaceholderMap getPlaceholders( final Map<Dockable, Integer> children ){
     	final PlaceholderStrategy strategy = getPlaceholderStrategy();
     	
-    	return dockables.toMap( new PlaceholderListItemAdapter<ScreenDockWindowHandle>() {
+    	return dockables.toMap( new PlaceholderListItemAdapter<Dockable, ScreenDockWindowHandle>() {
     		@Override
     		public ConvertedPlaceholderListItem convert( int index, ScreenDockWindowHandle dockable ) {
     			ConvertedPlaceholderListItem item = new ConvertedPlaceholderListItem();
@@ -552,7 +560,7 @@ public class ScreenDockStation extends AbstractDockStation {
     		throw new IllegalStateException( "there are children on this station" );
     	}
     	try{
-    		PlaceholderList<ScreenDockWindowHandle> next = new PlaceholderList<ScreenDockWindowHandle>( placeholders );
+    		DockablePlaceholderList<ScreenDockWindowHandle> next = new DockablePlaceholderList<ScreenDockWindowHandle>( placeholders );
     		if( getController() != null ){
     			dockables.setStrategy( null );
     			dockables.unbind();
@@ -580,58 +588,72 @@ public class ScreenDockStation extends AbstractDockStation {
     	if( getDockableCount() > 0 ){
     		throw new IllegalStateException( "must not have any children" );
     	}
+    	DockController controller = getController();
     	
-    	PlaceholderList<ScreenDockWindowHandle> next = new PlaceholderList<ScreenDockWindowHandle>();
-    	
-		if( getController() != null ){
-			dockables.setStrategy( null );
-			dockables.unbind();
-			dockables = next;
-			dockables.bind();
-			dockables.setStrategy( getPlaceholderStrategy() );
-		}
-		else{
-			dockables = next;
-		}
-    	
-    	next.read( map, new PlaceholderListItemAdapter<ScreenDockWindowHandle>(){
-			@Override
-			public ScreenDockWindowHandle convert( ConvertedPlaceholderListItem item ){
-				int id = item.getInt( "id" );
-				Dockable dockable = children.get( id );
-				if( dockable != null ){
-					int x = item.getInt( "x" );
-					int y = item.getInt( "y" );
-					int width = item.getInt( "width" );
-					int height = item.getInt( "height" );
-					boolean fullscreen = item.getBoolean( "fullscreen" );
-					
-			        listeners.fireDockableAdding( dockable );
-			        
-			        ScreenDockWindow window = createWindow();
-			        ScreenDockWindowHandle handle = new ScreenDockWindowHandle( dockable, window );
-			        window.setController( getController() );
-			        window.setFullscreenStrategy( getFullscreenStrategy() );
-			        window.setDockable( dockable );
-			        window.setWindowBounds( new Rectangle( x, y, width, height ), false );
-			        window.setVisible( isShowing() );
-			        window.validate();
-			        window.setFullscreen( fullscreen );
-			        
-			        return handle;
+    	try{
+    		if( controller != null ){
+    			controller.freezeLayout();
+    		}
+    		
+	    	DockablePlaceholderList<ScreenDockWindowHandle> next = new DockablePlaceholderList<ScreenDockWindowHandle>();
+	    	
+			if( controller != null ){
+				dockables.setStrategy( null );
+				dockables.unbind();
+				dockables = next;
+				dockables.bind();
+				dockables.setStrategy( getPlaceholderStrategy() );
+			}
+			else{
+				dockables = next;
+			}
+	    	
+	    	next.read( map, new PlaceholderListItemAdapter<Dockable, ScreenDockWindowHandle>(){
+				@Override
+				public ScreenDockWindowHandle convert( ConvertedPlaceholderListItem item ){
+					int id = item.getInt( "id" );
+					Dockable dockable = children.get( id );
+					if( dockable != null ){
+						DockUtilities.ensureTreeValidity( ScreenDockStation.this, dockable );
+						
+						int x = item.getInt( "x" );
+						int y = item.getInt( "y" );
+						int width = item.getInt( "width" );
+						int height = item.getInt( "height" );
+						boolean fullscreen = item.getBoolean( "fullscreen" );
+						
+				        listeners.fireDockableAdding( dockable );
+				        
+				        ScreenDockWindow window = createWindow();
+				        ScreenDockWindowHandle handle = new ScreenDockWindowHandle( dockable, window );
+				        window.setController( getController() );
+				        window.setFullscreenStrategy( getFullscreenStrategy() );
+				        window.setDockable( dockable );
+				        window.setWindowBounds( new Rectangle( x, y, width, height ), false );
+				        window.setVisible( isShowing() );
+				        window.validate();
+				        window.setFullscreen( fullscreen );
+				        
+				        return handle;
+					}
+					return null;
 				}
-				return null;
-			}
-			
-			@Override
-			public void added( ScreenDockWindowHandle dockable ){
-				dockable.asDockable().setDockParent( ScreenDockStation.this );
-				for( ScreenDockStationListener listener : screenDockStationListeners() ){
-		        	listener.windowRegistering( ScreenDockStation.this, dockable.asDockable(), dockable.getWindow() );
-		        }
-				listeners.fireDockableAdded( dockable.asDockable() );
-			}
-		});		
+				
+				@Override
+				public void added( ScreenDockWindowHandle dockable ){
+					dockable.asDockable().setDockParent( ScreenDockStation.this );
+					for( ScreenDockStationListener listener : screenDockStationListeners() ){
+			        	listener.windowRegistering( ScreenDockStation.this, dockable.asDockable(), dockable.getWindow() );
+			        }
+					listeners.fireDockableAdded( dockable.asDockable() );
+				}
+			});
+    	}
+    	finally{
+    		if( controller != null ){
+    			controller.meltLayout();
+    		}
+    	}
     }
     
     /**
@@ -785,7 +807,7 @@ public class ScreenDockStation extends AbstractDockStation {
     
     public void drop() {
         if( dropInfo.combine != null ){
-            combine( dropInfo, dropInfo.combiner );
+            combine( dropInfo, dropInfo.combiner, null );
         }
         else{
             Component component = dropInfo.dockable.getComponent();
@@ -956,7 +978,7 @@ public class ScreenDockStation extends AbstractDockStation {
 
     public void move() {
         if( dropInfo.combine != null ){
-            combine( dropInfo, dropInfo.combiner );
+            combine( dropInfo, dropInfo.combiner, null );
         }
         else{
             ScreenDockWindow window = getWindow( dropInfo.dockable );
@@ -1211,7 +1233,7 @@ public class ScreenDockStation extends AbstractDockStation {
             if( !done ){
                 Dockable old = best.getDockable();
                 if( old.accept( this, dockable ) && dockable.accept( this, old ) && (acceptance == null || acceptance.accept( this, old, dockable ))){
-                    combine( old, dockable );
+                    combine( old, dockable, property.getSuccessor() );
                     done = true;
                 }
             }
@@ -1281,6 +1303,21 @@ public class ScreenDockStation extends AbstractDockStation {
      * @param upper a {@link Dockable} which may be child of this station
      */
     public void combine( Dockable lower, Dockable upper ){
+    	combine( lower, upper, null );
+    }
+    
+    /**
+     * Combines the <code>lower</code> and the <code>upper</code> {@link Dockable}
+     * to one {@link Dockable}, and replaces the <code>lower</code> with
+     * this new Dockable. There are no checks whether this station 
+     * {@link #accept(Dockable) accepts} the new child or the children
+     * can be combined. The creation of the new {@link Dockable} is done
+     * by the {@link #getCombiner() combiner}.
+     * @param lower a {@link Dockable} which must be child of this station
+     * @param upper a {@link Dockable} which may be child of this station
+     * @param property location information associated with <code>upper</code>, may be <code>null</code>
+     */
+    public void combine( Dockable lower, Dockable upper, DockableProperty property ){
     	DropInfo info = new DropInfo();
     	
     	info.dockable = upper;
@@ -1300,7 +1337,7 @@ public class ScreenDockStation extends AbstractDockStation {
     	
     	info.combiner = combiner.prepare( info, true );
     	
-    	combine( info, info.combiner );
+    	combine( info, info.combiner, property );
     }
 
     /**
@@ -1308,8 +1345,9 @@ public class ScreenDockStation extends AbstractDockStation {
      * in <code>source</code>.
      * @param source the source {@link Dockable}s to combine
      * @param target the target created by the {@link Combiner}
+     * @param property location information associated with the new {@link Dockable}, can be <code>null</code>
      */
-    private void combine( CombinerSource source, CombinerTarget target ){
+    private void combine( CombinerSource source, CombinerTarget target, DockableProperty property ){
     	Dockable lower = source.getOld();
     	Dockable upper = source.getNew();
     	
@@ -1327,7 +1365,7 @@ public class ScreenDockStation extends AbstractDockStation {
         final Dockable old = window.getWindow().getDockable();
         
         int listIndex = dockables.levelToBase( index, Level.DOCKABLE );
-        PlaceholderList<ScreenDockWindowHandle>.Item item = dockables.list().get( listIndex );
+        DockablePlaceholderList<ScreenDockWindowHandle>.Item item = dockables.list().get( listIndex );
         final PlaceholderMap map = item.getPlaceholderMap();
         item.setPlaceholderMap( null );
         
@@ -1345,6 +1383,13 @@ public class ScreenDockStation extends AbstractDockStation {
 	        	return old;
         	}
         }, target );
+        
+        if( property != null ){
+        	DockStation combined = valid.asDockStation();
+        	if( combined != null && upper.getDockParent() == combined ){
+        		combined.move( upper, property );
+        	}
+        }
         
         listeners.fireDockableAdding( valid );
         window.setDockable( valid );
@@ -1370,11 +1415,13 @@ public class ScreenDockStation extends AbstractDockStation {
     		throw new IllegalArgumentException( "current not known to this station" );
     	}
     	
+    	DockUtilities.ensureTreeValidity( this, other );
+    	
         ScreenDockWindowHandle window = getWindowHandle( index );
         
         if( station ){
 	        int listIndex = dockables.levelToBase( index, Level.DOCKABLE );
-	        PlaceholderList<ScreenDockWindowHandle>.Item item = dockables.list().get( listIndex );
+	        DockablePlaceholderList<ScreenDockWindowHandle>.Item item = dockables.list().get( listIndex );
 	        item.setPlaceholderMap( current.asDockStation().getPlaceholders() );
         }
         
@@ -1595,6 +1642,14 @@ public class ScreenDockStation extends AbstractDockStation {
             visibility.fire();
         }
     }
+    
+    public boolean isStationVisible(){
+    	return isShowing();
+    }
+    
+    public boolean isVisible( Dockable dockable ){
+	    return isStationVisible();
+    }
         
     public Rectangle getStationBounds() {
         return null;
@@ -1702,7 +1757,7 @@ public class ScreenDockStation extends AbstractDockStation {
 		}
 
 		public PlaceholderMap getPlaceholders(){
-			for( PlaceholderList<ScreenDockWindowHandle>.Item item : dockables.list() ){
+			for( DockablePlaceholderList<ScreenDockWindowHandle>.Item item : dockables.list() ){
 				ScreenDockWindowHandle handle = item.getDockable();
 				if( handle != null && handle.getWindow() == combine ){
 					return item.getPlaceholderMap();
@@ -1713,12 +1768,13 @@ public class ScreenDockStation extends AbstractDockStation {
     }
     
     /**
-     * A listener that adds itself to {@link ScreenDockWindow}s for monitoring their fullscreen state.
+     * A listener that adds itself to {@link ScreenDockWindow}s for monitoring their fullscreen state
+     * and their position.
      * @author Benjamin Sigg
      */
     private class FullscreenListener implements ScreenDockStationListener, ScreenDockWindowListener{
 		public void fullscreenChanged( ScreenDockStation station, Dockable dockable ) {
-			// ignore
+			listeners.fireDockablesRepositioned( dockable );
 		}
 
 		public void windowDeregistering( ScreenDockStation station, Dockable dockable, ScreenDockWindow window ) {
@@ -1740,7 +1796,10 @@ public class ScreenDockStation extends AbstractDockStation {
 		}
 
 		public void shapeChanged( ScreenDockWindow window ) {
-			// ignore
+			Dockable dockable = window.getDockable();
+			if( dockable != null ){
+				listeners.fireDockablesRepositioned( dockable );
+			}
 		}
 
 		public void visibilityChanged( ScreenDockWindow window ) {

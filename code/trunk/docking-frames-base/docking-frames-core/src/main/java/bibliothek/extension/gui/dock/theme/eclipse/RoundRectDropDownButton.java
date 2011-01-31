@@ -37,11 +37,14 @@ import javax.swing.Icon;
 import javax.swing.JComponent;
 
 import bibliothek.gui.dock.action.DropDownAction;
-import bibliothek.gui.dock.control.FocusAwareComponent;
+import bibliothek.gui.dock.control.focus.FocusAwareComponent;
 import bibliothek.gui.dock.themes.basic.action.BasicButtonModel;
 import bibliothek.gui.dock.themes.basic.action.BasicButtonModelAdapter;
 import bibliothek.gui.dock.themes.basic.action.BasicDropDownButtonHandler;
 import bibliothek.gui.dock.themes.basic.action.BasicDropDownButtonModel;
+import bibliothek.gui.dock.util.AbstractPaintableComponent;
+import bibliothek.gui.dock.util.BackgroundComponent;
+import bibliothek.gui.dock.util.BackgroundPaint;
 import bibliothek.gui.dock.util.DockUtilities;
 import bibliothek.util.Colors;
 
@@ -70,7 +73,7 @@ public class RoundRectDropDownButton extends JComponent implements FocusAwareCom
      */
     public RoundRectDropDownButton( BasicDropDownButtonHandler handler ){
         this.handler = handler;
-        model = new BasicDropDownButtonModel( this, handler, true ){
+        model = new BasicDropDownButtonModel( this, handler, handler, true ){
             @Override
             protected boolean inDropDownArea( int x, int y ) {
                 return RoundRectDropDownButton.this.inDropDownArea( x, y );
@@ -158,6 +161,65 @@ public class RoundRectDropDownButton extends JComponent implements FocusAwareCom
     
     @Override
     protected void paintComponent( Graphics g ) {
+		BasicDropDownButtonModel model = getModel();
+		BackgroundPaint paint = model.getBackground();
+		BackgroundComponent component = model.getBackgroundComponent();
+		
+		AbstractPaintableComponent paintable = new AbstractPaintableComponent( component, this, paint ){
+			protected void foreground( Graphics g ){
+				doPaintForeground( g );
+			}
+			
+			protected void background( Graphics g ){
+				doPaintBackground( g );
+			}
+
+			protected void border( Graphics g ){
+				// ignore	
+			}
+			
+			protected void children( Graphics g ){
+				// ignore
+			}
+			
+			protected void overlay( Graphics g ){
+				// ignore	
+			}
+			
+			public boolean isSolid(){
+				return false;
+			}
+			
+			public boolean isTransparent(){
+				return false;
+			}
+		};
+		paintable.paint( g );
+    }
+    
+    private void doPaintBackground( Graphics g ){
+        Color background = getBackground();
+        
+        Color border = null;
+        if( model.isMousePressed() ){
+            border = Colors.diffMirror( background, 0.3 );
+            background = Colors.undiffMirror( background, 0.8 );
+        }
+        else if( model.isSelected() || model.isMouseInside() ){
+            border = Colors.diffMirror( background, 0.3 );
+            background = Colors.undiffMirror( background, 0.4 );
+        }
+        
+        int w = getWidth()-1;
+        int h = getHeight()-1;
+        
+        if( border != null ){
+            g.setColor( background );
+            g.fillRoundRect( 0, 0, w, h, 4, 4 );
+        }
+    }
+    
+    private void doPaintForeground( Graphics g ){
         Icon drop = dropIcon;
         if( !isEnabled() ){
             if( disabledDropIcon == null )
@@ -181,9 +243,6 @@ public class RoundRectDropDownButton extends JComponent implements FocusAwareCom
         int h = getHeight()-1;
         
         if( border != null ){
-            g.setColor( background );
-            g.fillRoundRect( 0, 0, w, h, 4, 4 );
-            
             g.setColor( border );
             g.drawRoundRect( 0, 0, w, h, 4, 4 );
 

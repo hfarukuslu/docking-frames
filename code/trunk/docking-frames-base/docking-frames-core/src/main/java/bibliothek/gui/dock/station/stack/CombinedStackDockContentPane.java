@@ -31,6 +31,7 @@ import javax.swing.JPanel;
 
 import bibliothek.gui.dock.focus.DockFocusTraversalPolicy;
 import bibliothek.gui.dock.station.stack.tab.TabLayoutManager;
+import bibliothek.gui.dock.util.BackgroundPanel;
 
 /**
  * This panel paints the contents of a {@link CombinedStackDockComponent}. It is just a {@link JPanel}. The layout has to be 
@@ -38,15 +39,17 @@ import bibliothek.gui.dock.station.stack.tab.TabLayoutManager;
  * focus traversal policy provider}.
  * @author Benjamin Sigg
  */
-public class CombinedStackDockContentPane extends JPanel{
+public class CombinedStackDockContentPane extends BackgroundPanel{
 	private CombinedStackDockComponent<?, ?, ?> parent;
+	
+	private boolean paintBackground = true;
 	
 	/**
 	 * Creates a new content pane
 	 * @param parent the owner of this pane, not <code>null</code>
 	 */
 	public CombinedStackDockContentPane( CombinedStackDockComponent<?, ?, ?> parent ){
-		super( null );
+		super( null, false, true );
 		if( parent == null )
 			throw new IllegalArgumentException( "parent must not be null" );
 		this.parent = parent;
@@ -55,6 +58,23 @@ public class CombinedStackDockContentPane extends JPanel{
 		setFocusTraversalPolicy( new DockFocusTraversalPolicy( new CombinedStackDockFocusTraversalPolicy( this ), true ) );
 	}
 	
+	/**
+	 * Tells this panel whether the background should be painted or not.
+	 * @param paintBackground whether to paint a background
+	 */
+	public void setPaintBackground( boolean paintBackground ){
+		this.paintBackground = paintBackground;
+		setTransparent( !paintBackground );
+	}
+	
+	/**
+	 * Tells whether a background should be painted or not
+	 * @return whether a background should be painted
+	 */
+	public boolean isPaintBackground(){
+		return paintBackground;
+	}
+		
 	/**
 	 * Gets the owner of this pane.
 	 * @return the owner, not <code>null</code>

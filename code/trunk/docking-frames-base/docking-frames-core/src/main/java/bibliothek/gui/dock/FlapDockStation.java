@@ -36,6 +36,7 @@ import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.HierarchyBoundsListener;
 import java.awt.event.HierarchyEvent;
+import java.awt.event.HierarchyListener;
 import java.awt.event.InputEvent;
 import java.awt.event.MouseEvent;
 import java.io.IOException;
@@ -56,7 +57,8 @@ import bibliothek.gui.dock.action.DefaultDockActionSource;
 import bibliothek.gui.dock.action.DockAction;
 import bibliothek.gui.dock.action.ListeningDockAction;
 import bibliothek.gui.dock.action.LocationHint;
-import bibliothek.gui.dock.control.MouseFocusObserver;
+import bibliothek.gui.dock.control.focus.FocusController;
+import bibliothek.gui.dock.control.focus.MouseFocusObserver;
 import bibliothek.gui.dock.event.DockStationAdapter;
 import bibliothek.gui.dock.event.DockTitleEvent;
 import bibliothek.gui.dock.event.DockableAdapter;
@@ -70,6 +72,7 @@ import bibliothek.gui.dock.station.Combiner;
 import bibliothek.gui.dock.station.DisplayerCollection;
 import bibliothek.gui.dock.station.DisplayerFactory;
 import bibliothek.gui.dock.station.DockableDisplayer;
+import bibliothek.gui.dock.station.StationBackgroundComponent;
 import bibliothek.gui.dock.station.StationPaint;
 import bibliothek.gui.dock.station.flap.ButtonPane;
 import bibliothek.gui.dock.station.flap.DefaultFlapLayoutManager;
@@ -81,12 +84,12 @@ import bibliothek.gui.dock.station.flap.FlapDropInfo;
 import bibliothek.gui.dock.station.flap.FlapLayoutManager;
 import bibliothek.gui.dock.station.flap.FlapWindow;
 import bibliothek.gui.dock.station.flap.FlapWindowFactory;
+import bibliothek.gui.dock.station.flap.button.ButtonContent;
 import bibliothek.gui.dock.station.support.CombinerSource;
 import bibliothek.gui.dock.station.support.CombinerSourceWrapper;
 import bibliothek.gui.dock.station.support.CombinerTarget;
-import bibliothek.gui.dock.station.support.CombinerWrapper;
 import bibliothek.gui.dock.station.support.ConvertedPlaceholderListItem;
-import bibliothek.gui.dock.station.support.DisplayerFactoryWrapper;
+import bibliothek.gui.dock.station.support.DockablePlaceholderList;
 import bibliothek.gui.dock.station.support.DockableVisibilityManager;
 import bibliothek.gui.dock.station.support.PlaceholderList;
 import bibliothek.gui.dock.station.support.PlaceholderListItem;
@@ -94,13 +97,17 @@ import bibliothek.gui.dock.station.support.PlaceholderListItemAdapter;
 import bibliothek.gui.dock.station.support.PlaceholderListItemConverter;
 import bibliothek.gui.dock.station.support.PlaceholderMap;
 import bibliothek.gui.dock.station.support.PlaceholderStrategy;
-import bibliothek.gui.dock.station.support.StationPaintWrapper;
 import bibliothek.gui.dock.station.support.PlaceholderList.Level;
+import bibliothek.gui.dock.themes.DefaultCombinerValue;
+import bibliothek.gui.dock.themes.DefaultDisplayerFactoryValue;
+import bibliothek.gui.dock.themes.DefaultStationPaintValue;
+import bibliothek.gui.dock.themes.ThemeManager;
 import bibliothek.gui.dock.themes.basic.BasicButtonTitleFactory;
 import bibliothek.gui.dock.title.ControllerTitleFactory;
 import bibliothek.gui.dock.title.DockTitle;
 import bibliothek.gui.dock.title.DockTitleRequest;
 import bibliothek.gui.dock.title.DockTitleVersion;
+import bibliothek.gui.dock.util.BackgroundAlgorithm;
 import bibliothek.gui.dock.util.DockProperties;
 import bibliothek.gui.dock.util.DockUtilities;
 import bibliothek.gui.dock.util.PropertyKey;
@@ -156,94 +163,9 @@ public class FlapDockStation extends AbstractDockableStation {
             	}, true );
     
     /**
-     * What kind of information should be displayed on the buttons. 
-     */
-    public static enum ButtonContent{
-        THEME_DEPENDENT,
-        ICON_ONLY, TEXT_ONLY, ICON_AND_TEXT_ONLY, ICON_THEN_TEXT_ONLY, TEXT_THEN_ICON_ONLY,
-        ICON_ACTIONS, TEXT_ACTIONS, ICON_AND_TEXT_ACTIONS, ICON_THEN_TEXT_ACTIONS, TEXT_THEN_ICON_ACTIONS;
-        
-
-        /**
-         * Tells whether actions should be shown on the button of a {@link FlapDockStation}
-         * or not.
-         * @param theme what the theme would do
-         * @return <code>true</code> if the actions should be shown
-         */
-        public boolean showActions( boolean theme ){
-            switch( this ){
-                case ICON_AND_TEXT_ONLY:
-                case ICON_ONLY:
-                case ICON_THEN_TEXT_ONLY:
-                case TEXT_ONLY:
-                case TEXT_THEN_ICON_ONLY:
-                    return false;
-                case ICON_ACTIONS:
-                case ICON_AND_TEXT_ACTIONS:
-                case ICON_THEN_TEXT_ACTIONS:
-                case TEXT_ACTIONS:
-                case TEXT_THEN_ICON_ACTIONS:
-                    return true;
-            }
-            return theme;
-        }
-        
-        /**
-         * Tells whether an icon should be shown.
-         * @param text whether text is present or not.
-         * @param theme what the theme would decide.
-         * @return <code>true</code> if icons should be shown
-         */
-        public boolean showIcon( boolean text, boolean theme ){
-            switch( this ){
-                case ICON_ACTIONS:
-                case ICON_AND_TEXT_ACTIONS:
-                case ICON_AND_TEXT_ONLY:
-                case ICON_ONLY:
-                case ICON_THEN_TEXT_ACTIONS:
-                case ICON_THEN_TEXT_ONLY:
-                    return true;
-                case TEXT_ACTIONS:
-                case TEXT_ONLY:
-                    return false;
-                case TEXT_THEN_ICON_ACTIONS:
-                case TEXT_THEN_ICON_ONLY:
-                    return !text;
-            }
-            
-            return theme;
-        }
-        
-        /**
-         * Tells whether text should be shown.
-         * @param icon whether an icon is present or not
-         * @param theme what the theme would decide.
-         * @return <code>true</code> if text should be shown
-         */
-        public boolean showText( boolean icon, boolean theme ){
-            switch( this ){
-                case TEXT_ACTIONS:
-                case TEXT_ONLY:
-                case TEXT_THEN_ICON_ACTIONS:
-                case TEXT_THEN_ICON_ONLY:
-                case ICON_AND_TEXT_ACTIONS:
-                case ICON_AND_TEXT_ONLY:
-                    return true;
-                case ICON_ACTIONS:
-                case ICON_ONLY:
-                    return false;
-                case ICON_THEN_TEXT_ACTIONS:
-                case ICON_THEN_TEXT_ONLY:
-                    return !icon;
-            }
-            
-            return theme;
-        }
-    };
-
-    /**
      * Key for all {@link DockTheme}s, tells the theme what content on the buttons
-     * should be visible. Note that some themes might ignore that setting.
+     * should be visible. Note that some themes might ignore that setting. Chaning this property will call
+     * {@link #recreateTitles()}, meaning all {@link DockTitle}s are removed and recreated.
      */
     public static final PropertyKey<ButtonContent> BUTTON_CONTENT = new PropertyKey<ButtonContent>(
             "flap dock station button content", new ConstantPropertyFactory<ButtonContent>( ButtonContent.THEME_DEPENDENT ), true );
@@ -343,7 +265,7 @@ public class FlapDockStation extends AbstractDockableStation {
     private Dockable oldFrontDockable;
     
     /** A list of all {@link Dockable Dockables} registered on this station */
-    private PlaceholderList<DockableHandle> handles = new PlaceholderList<DockableHandle>();
+    private DockablePlaceholderList<DockableHandle> handles = new DockablePlaceholderList<DockableHandle>();
     /** a listener for all {@link Dockable}s of this station */
     private Listener dockableListener = new Listener();
     
@@ -356,11 +278,11 @@ public class FlapDockStation extends AbstractDockableStation {
     private DockTitleVersion titleVersion;
     
     /** The {@link StationPaint} used to paint on this station */
-    private StationPaintWrapper paint = new StationPaintWrapper();
+    private DefaultStationPaintValue paint;
     /** The {@link Combiner} user to combine {@link Dockable Dockables}*/
-    private CombinerWrapper combiner = new CombinerWrapper();
+    private DefaultCombinerValue combiner;
     /** The {@link DisplayerFactory} used to create displayers*/
-    private DisplayerFactoryWrapper displayerFactory = new DisplayerFactoryWrapper();
+    private DefaultDisplayerFactoryValue displayerFactory;
     /** Collection used to handle the {@link DockableDisplayer} */
     private DisplayerCollection displayers;
     
@@ -386,11 +308,16 @@ public class FlapDockStation extends AbstractDockableStation {
     
     /** A listener that is added to the parent of this dockable station. */
     private VisibleListener visibleListener = new VisibleListener();
+    /** the last checked state of {@link #isDockableVisible()} */
+    private boolean lastVisible = false;
     /** A list of listeners that were added to this station */
     private List<FlapDockListener> flapDockListeners = new ArrayList<FlapDockListener>();
     
     /** Manager for the visibility of the children of this station */
     private DockableVisibilityManager visibility;
+    
+    /** the background algorithm of this component */
+    private Background background = new Background();
     
     /**
      * Defaultconstructor of a {@link FlapDockStation}
@@ -406,8 +333,9 @@ public class FlapDockStation extends AbstractDockableStation {
      * {@link #init()} must be called by a subclass.
      */
     protected FlapDockStation( boolean init ){
-    	if( init )
+    	if( init ){
     		init();
+    	}
     }
     
     /**
@@ -416,9 +344,15 @@ public class FlapDockStation extends AbstractDockableStation {
     protected void init(){
         visibility = new DockableVisibilityManager( listeners );
         buttonPane = createButtonPane();
+        buttonPane.setBackground( background );
+        buttonPane.setController( getController() );
+        
         setDirection( Direction.SOUTH );
         
+        displayerFactory = new DefaultDisplayerFactoryValue( ThemeManager.DISPLAYER_FACTORY + ".flap", this );
         displayers = new DisplayerCollection( this, displayerFactory );
+        paint = new DefaultStationPaintValue( ThemeManager.STATION_PAINT + ".flap", this );
+        combiner = new DefaultCombinerValue( ThemeManager.COMBINER + ".flap", this );
         
         buttonPane.addComponentListener( new ComponentAdapter(){
             @Override
@@ -444,6 +378,17 @@ public class FlapDockStation extends AbstractDockableStation {
                     updateWindowBounds();
             }
         });
+        
+		buttonPane.addHierarchyListener( new HierarchyListener(){
+			public void hierarchyChanged( HierarchyEvent e ){
+				if( (e.getChangeFlags() & HierarchyEvent.SHOWING_CHANGED) != 0 ){
+					if( getDockParent() == null ){
+						getDockableStateListeners().checkVisibility();
+					}
+					checkVisibility();
+				}
+			}
+		});
         
         holdAction = createHoldAction();
     }
@@ -489,7 +434,7 @@ public class FlapDockStation extends AbstractDockableStation {
             if( remove ){
             	handles.unbind();
                 getController().removeDockableFocusListener( controllerListener );
-                getController().getFocusObserver().removeVetoListener( controllerListener );
+                getController().getFocusController().removeVetoListener( controllerListener );
                 
                 oldFrontDockable = getFrontDockable();
                 setFrontDockable( null );
@@ -506,10 +451,18 @@ public class FlapDockStation extends AbstractDockableStation {
                 titleVersion = null;
                 buttonVersion = null;
             }
-    
+
             super.setController(controller);
             placeholderStrategy.setProperties( controller );
             displayers.setController( controller );
+            paint.setController( controller );
+            displayerFactory.setController( controller );
+            combiner.setController( controller );
+            background.setController( controller );
+            if( window != null ){
+            	window.setController( controller );
+            }
+            buttonPane.setController( controller );
             FlapLayoutManager oldLayoutManager = layoutManager.getValue();
             layoutManager.setProperties( controller );
             FlapLayoutManager newLayoutManager = layoutManager.getValue();
@@ -550,7 +503,7 @@ public class FlapDockStation extends AbstractDockableStation {
                 }
                 
                 controller.addDockableFocusListener( controllerListener );
-                controller.getFocusObserver().addVetoListener( controllerListener );
+                controller.getFocusController().addVetoListener( controllerListener );
                 
                 if( isStationVisible() )
                     setFrontDockable( oldFrontDockable );
@@ -558,6 +511,8 @@ public class FlapDockStation extends AbstractDockableStation {
             
             windowFactory.setProperties( controller );
             buttonPane.resetTitles();
+            
+            visibility.fire();
         }
     }
     
@@ -650,7 +605,7 @@ public class FlapDockStation extends AbstractDockableStation {
      * Gets the factory to create new {@link DockableDisplayer}.
      * @return the factory
      */
-    public DisplayerFactoryWrapper getDisplayerFactory() {
+    public DefaultDisplayerFactoryValue getDisplayerFactory() {
         return displayerFactory;
     }
     
@@ -666,7 +621,7 @@ public class FlapDockStation extends AbstractDockableStation {
      * Gets the {@link Combiner} to merge {@link Dockable Dockables}
      * @return the combiner
      */
-    public CombinerWrapper getCombiner() {
+    public DefaultCombinerValue getCombiner() {
         return combiner;
     }
     
@@ -674,7 +629,7 @@ public class FlapDockStation extends AbstractDockableStation {
      * Gets the {@link StationPaint} to paint on this station.
      * @return The paint
      */
-    public StationPaintWrapper getPaint() {
+    public DefaultStationPaintValue getPaint() {
         return paint;
     }
     
@@ -766,13 +721,14 @@ public class FlapDockStation extends AbstractDockableStation {
         
         updateWindow( dockable, false );
         
-        if( oldFrontDockable != null ){
-            if( getController() != null ){
+        if( getController() != null ){
+        	if( oldFrontDockable != null ){
                 DockTitle[] titles = oldFrontDockable.listBoundTitles();
                 boolean active = getController().isFocused( oldFrontDockable );
                 for( DockTitle title : titles )
                     changed( oldFrontDockable, title, active );
             }
+        	
         }
         
         if( window != null ){
@@ -780,6 +736,15 @@ public class FlapDockStation extends AbstractDockableStation {
         		window.setWindowVisible( false );
         	else
         		window.repaint();
+        }
+        
+        if( getController() != null ){
+        	if( dockable != null ){
+        		DockTitle[] titles = dockable.listBoundTitles();
+                boolean active = getController().isFocused( dockable );
+                for( DockTitle title : titles )
+                    changed( dockable, title, active );
+            }
         }
         
         visibility.fire();
@@ -1147,12 +1112,16 @@ public class FlapDockStation extends AbstractDockableStation {
      * @param window the new window, can be <code>null</code>
      */
     private void setFlapWindow( FlapWindow window ){
-    	if( this.window != null )
+    	if( this.window != null ){
+    		this.window.setController( null );
     		this.window.destory();
+    	}
     	
         this.window = window;
-        if( window != null )
+        if( window != null ){
+        	window.setController( getController() );
             window.setDropInfo( dropInfo );
+        }
     }
     
     /**
@@ -1176,7 +1145,7 @@ public class FlapDockStation extends AbstractDockableStation {
     	}
     	
     	try{
-    		PlaceholderList<DockableHandle> next = new PlaceholderList<DockableHandle>( placeholders );
+    		DockablePlaceholderList<DockableHandle> next = new DockablePlaceholderList<DockableHandle>( placeholders );
     		if( getController() != null ){
     			handles.setStrategy( null );
     			handles.unbind();
@@ -1211,7 +1180,7 @@ public class FlapDockStation extends AbstractDockableStation {
     public PlaceholderMap getPlaceholders( final Map<Dockable, Integer> children ){
     	final PlaceholderStrategy strategy = getPlaceholderStrategy();
     	
-    	return handles.toMap( new PlaceholderListItemAdapter<DockableHandle>() {
+    	return handles.toMap( new PlaceholderListItemAdapter<Dockable, DockableHandle>() {
     		@Override
     		public ConvertedPlaceholderListItem convert( int index, DockableHandle dockable ){
 	    		ConvertedPlaceholderListItem item = new ConvertedPlaceholderListItem();
@@ -1245,42 +1214,56 @@ public class FlapDockStation extends AbstractDockableStation {
     		throw new IllegalStateException( "must not have any children" );
     	}
     	
-		PlaceholderList<DockableHandle> next = new PlaceholderList<DockableHandle>( map, new PlaceholderListItemAdapter<DockableHandle>(){
-			@Override
-			public DockableHandle convert( ConvertedPlaceholderListItem item ){
-				int id = item.getInt( "id" );
-				Dockable dockable = children.get( id );
-				if( dockable != null ){
-					boolean hold = item.getBoolean( "hold" );
-					int size = item.getInt( "size" );
-					
-			        listeners.fireDockableAdding( dockable );
-			        DockableHandle handle = link( dockable );;    
-			        
-			        setHold( dockable, hold );
-			        setWindowSize( dockable, size );
-			        
-			        return handle;
+    	DockController controller = getController();
+    	try{
+    		if( controller != null ){
+    			controller.freezeLayout();
+    		}
+    		
+	    	DockablePlaceholderList<DockableHandle> next = new DockablePlaceholderList<DockableHandle>( map, new PlaceholderListItemAdapter<Dockable, DockableHandle>(){
+				@Override
+				public DockableHandle convert( ConvertedPlaceholderListItem item ){
+					int id = item.getInt( "id" );
+					Dockable dockable = children.get( id );
+					if( dockable != null ){
+						DockUtilities.ensureTreeValidity( FlapDockStation.this, dockable );
+						
+						boolean hold = item.getBoolean( "hold" );
+						int size = item.getInt( "size" );
+						
+				        listeners.fireDockableAdding( dockable );
+				        DockableHandle handle = link( dockable );;    
+				        
+				        setHold( dockable, hold );
+				        setWindowSize( dockable, size );
+				        
+				        return handle;
+					}
+					return null;
 				}
-				return null;
+				
+				@Override
+				public void added( DockableHandle dockable ){
+					dockable.getDockable().setDockParent( FlapDockStation.this );
+					listeners.fireDockableAdded( dockable.getDockable() );
+				}
+			});
+			if( getController() != null ){
+				handles.setStrategy( null );
+				handles.unbind();
+				handles = next;
+				handles.bind();
+				handles.setStrategy( getPlaceholderStrategy() );
 			}
-			
-			@Override
-			public void added( DockableHandle dockable ){
-				dockable.getDockable().setDockParent( FlapDockStation.this );
-				listeners.fireDockableAdded( dockable.getDockable() );
+			else{
+				handles = next;
 			}
-		});
-		if( getController() != null ){
-			handles.setStrategy( null );
-			handles.unbind();
-			handles = next;
-			handles.bind();
-			handles.setStrategy( getPlaceholderStrategy() );
-		}
-		else{
-			handles = next;
-		}
+    	}
+    	finally{
+    		if( controller != null ){
+    			controller.meltLayout();
+    		}
+    	}
 		buttonPane.resetTitles();
     }
 
@@ -1400,7 +1383,7 @@ public class FlapDockStation extends AbstractDockableStation {
 			}
 			
 			public PlaceholderMap getPlaceholders(){
-				for( PlaceholderList<DockableHandle>.Item item : handles.list() ){
+				for( DockablePlaceholderList<DockableHandle>.Item item : handles.list() ){
 					DockableHandle handle = item.getDockable();
 					if( handle != null && handle.getDockable() == child ){
 						return item.getPlaceholderMap();
@@ -1430,7 +1413,7 @@ public class FlapDockStation extends AbstractDockableStation {
 
     public void drop(){
     	if( dropInfo.getCombineTarget() != null ){
-            combine( dropInfo, dropInfo.getCombineTarget() );
+            combine( dropInfo, dropInfo.getCombineTarget(), null );
         }
         else{
             add( dropInfo.getDockable(), dropInfo.getIndex() );
@@ -1457,11 +1440,11 @@ public class FlapDockStation extends AbstractDockableStation {
      * @return <code>true</code> if the new child could be added,
      * <code>false</code> if the child has been rejected
      */
-    public boolean drop( Dockable dockable, FlapDockProperty property ) {
+    public boolean drop( final Dockable dockable, FlapDockProperty property ) {
         DockUtilities.ensureTreeValidity( this, dockable );
         boolean result = false;
         
-        Path placeholder = property.getPlaceholder();
+        final Path placeholder = property.getPlaceholder();
         DockableProperty successor = property.getSuccessor();
         int index = property.getIndex();
         boolean acceptable = acceptable( dockable );
@@ -1469,29 +1452,35 @@ public class FlapDockStation extends AbstractDockableStation {
     	if( placeholder != null && successor != null ){
     		DockableHandle current = handles.getDockableAt( placeholder );
     		if( current != null ){
-    			DockStation station = current.getDockable().asDockStation();
+    			final Dockable oldDockable = current.getDockable();
+    			DockStation station = oldDockable.asDockStation();
     			if( station != null ){
     				if( station.drop( dockable, successor )){
     					result = true;
     					handles.removeAll( placeholder );
     				}
     			}
+    			else{
+    				result = combine( current.getDockable(), dockable, successor );
+    			}
     		}
     	}
-    	else if( placeholder != null ){
-    		index = handles.getDockableIndex( placeholder );
-    		if( index == -1 ){
-    			index = property.getIndex();
+    	
+    	if( placeholder != null && !result ){
+    		int listIndex = handles.getListIndex( placeholder );
+    		if( listIndex >= 0 ){
+    			add( dockable, property.getIndex(), listIndex );
+    			setHold( dockable, property.isHolding() );
+    			int size = property.getSize();
+    			if( size >= getWindowMinSize() )
+    				setWindowSize( dockable, size );
+    			result = true;
     		}
     		else{
-    			if( acceptable ){
-	    			listeners.fireDockableAdding( dockable );
-	    			DockableHandle handle = link( dockable );
-	    			handles.put( placeholder, handle );
-	    			dockable.setDockParent( this );
-	    			listeners.fireDockableAdded( dockable );
-	    			result = true;
-    			}
+	    		index = handles.getDockableIndex( placeholder );
+	    		if( index == -1 ){
+	    			index = property.getIndex();
+	    		}
     		}
     	}
     	
@@ -1511,6 +1500,9 @@ public class FlapDockStation extends AbstractDockableStation {
                     result = true;
                 }
             }
+            else{
+            	result = combine( getDockable( index ), dockable, successor );
+            }
         }
         
         if( !result && acceptable ){
@@ -1524,7 +1516,46 @@ public class FlapDockStation extends AbstractDockableStation {
         
         return result;
     }
-
+//    
+//    private boolean combine( final Dockable oldDockable, final Dockable newDockable, final DockableProperty property ){
+//		CombinerSource source = new CombinerSource(){
+//			public boolean isMouseOverTitle(){
+//				return false;
+//			}
+//			
+//			public Dimension getSize(){
+//				return null;
+//			}
+//			
+//			public PlaceholderMap getPlaceholders(){
+//				return handles.getMap( placeholder );
+//			}
+//			
+//			public DockStation getParent(){
+//				return FlapDockStation.this;
+//			}
+//			
+//			public Dockable getOld(){
+//				return oldDockable;
+//			}
+//			
+//			public Dockable getNew(){
+//				return dockable;
+//			}
+//			
+//			public Point getMousePosition(){
+//				return null;
+//			}
+//		};
+//		
+//		CombinerTarget target = combiner.prepare( source, true );
+//		if( target != null ){
+//			combine( source, target, property.getSuccessor() );
+//			return true;
+//		}
+//		return false;
+//    }
+    
     public DockableProperty getDockableProperty( Dockable dockable, Dockable target ) {
     	int index = indexOf( dockable );
     	boolean holding = isHold( dockable );
@@ -1551,7 +1582,7 @@ public class FlapDockStation extends AbstractDockableStation {
     public void move() {
     	if( dropInfo.getCombineTarget() != null ){
             remove( dropInfo.getDockable() );
-            combine( dropInfo, dropInfo.getCombineTarget() );
+            combine( dropInfo, dropInfo.getCombineTarget(), null );
         }
     	else{
 	    	int index = indexOf( dropInfo.getDockable() );
@@ -1560,6 +1591,7 @@ public class FlapDockStation extends AbstractDockableStation {
 	    	}
 	    	handles.dockables().move( index, dropInfo.getIndex() );
 	    	buttonPane.resetTitles();
+	    	fireDockablesRepositioned( Math.min( index, dropInfo.getIndex() ), Math.max( index, dropInfo.getIndex() ) );
     	}
     }
     
@@ -1576,6 +1608,7 @@ public class FlapDockStation extends AbstractDockableStation {
             if( destination != index ){
             	handles.dockables().move( index, destination );
                 buttonPane.resetTitles();
+                fireDockablesRepositioned( Math.min( index, destination ), Math.max( index, destination ) );
             }
         }
     }
@@ -1696,6 +1729,8 @@ public class FlapDockStation extends AbstractDockableStation {
         // race condition, only required if not called from the EDT
         buttonPane.resetTitles();
         listeners.fireDockableRemoved( dockable );
+        
+        fireDockablesRepositioned( index );
     }
     
     /**
@@ -1714,14 +1749,25 @@ public class FlapDockStation extends AbstractDockableStation {
      * @param index the location in the button-panel of the child
      */
     public void add( Dockable dockable, int index ){
+    	add( dockable, index, -1 );
+    }
+    
+    private void add( Dockable dockable, int index, int listIndex ){
         DockUtilities.ensureTreeValidity( this, dockable );
         
         listeners.fireDockableAdding( dockable );
         DockableHandle handle = link( dockable );
-        handles.dockables().add( index, handle );
+        if( listIndex == -1 ){
+        	handles.dockables().add( index, handle );
+        }
+        else{
+        	handles.list().get( listIndex ).setDockable( handle );
+        }
         dockable.setDockParent( this );
         buttonPane.resetTitles(); // race condition, only required if not called from the EDT
         listeners.fireDockableAdded( dockable );
+        
+        fireDockablesRepositioned( index+1 );
     }
     
     private DockableHandle link( Dockable dockable ){
@@ -1741,13 +1787,28 @@ public class FlapDockStation extends AbstractDockableStation {
      * <code>false</code> otherwise (the <code>child</code> will remain
      * on this station)
      */
-    public boolean combine( final Dockable child, Dockable append ){
+    public boolean combine( Dockable child, Dockable append ){
+    	return combine( child, append, null );
+    }
+
+    /**
+     * Creates a combination out of <code>child</code>, which must be a
+     * child of this station, and <code>append</code> which must not be
+     * a child of this station. 
+     * @param child a child of this station
+     * @param append a {@link Dockable} that is not a child of this station
+     * @param property location information associated with <code>append</code>
+     * @return <code>true</code> if the combination was successful,
+     * <code>false</code> otherwise (the <code>child</code> will remain
+     * on this station)
+     */
+    public boolean combine( final Dockable child, Dockable append, DockableProperty property ){
     	int index = indexOf( child );
         if( index < 0 )
             throw new IllegalArgumentException( "Child must be a child of this station" );
         
         int listIndex = handles.levelToBase( index, Level.DOCKABLE );
-        PlaceholderList<DockableHandle>.Item oldItem = handles.list().get( listIndex );
+        DockablePlaceholderList<DockableHandle>.Item oldItem = handles.list().get( listIndex );
         final PlaceholderMap placeholders = oldItem.getPlaceholderMap();
         
     	FlapDropInfo info = new FlapDropInfo( this, append ){
@@ -1773,10 +1834,10 @@ public class FlapDockStation extends AbstractDockableStation {
 		};
 		
 		CombinerTarget target = combiner.prepare( info, true );
-		return combine( info, target );
+		return combine( info, target, property );
     }
     
-    private boolean combine( CombinerSource source, CombinerTarget target ){
+    private boolean combine( CombinerSource source, CombinerTarget target, DockableProperty property ){
     	DockController controller = getController();
     	Dockable child = source.getOld();
     	Dockable append = source.getNew();
@@ -1795,7 +1856,7 @@ public class FlapDockStation extends AbstractDockableStation {
 	        boolean hold = isHold( child );
 	        
 	        int listIndex = handles.levelToBase( index, Level.DOCKABLE );
-	        PlaceholderList<DockableHandle>.Item oldItem = handles.list().get( listIndex );
+	        DockablePlaceholderList<DockableHandle>.Item oldItem = handles.list().get( listIndex );
 	        final PlaceholderMap placeholders = oldItem.getPlaceholderMap();
 	        oldItem.setPlaceholderMap( null );
 	        
@@ -1816,9 +1877,17 @@ public class FlapDockStation extends AbstractDockableStation {
 	        	}
 	        }, target );
 	        
+	        if( property != null ){
+	        	DockStation combined = combination.asDockStation();
+	        	if( combined != null && append.getDockParent() == combined ){
+	        		combined.move( append, property );
+	        	}
+	        }
+	        
 	        add( combination, index );
 	        
-	        PlaceholderList<DockableHandle>.Item newItem = handles.list().get( listIndex );
+	        listIndex = handles.levelToBase( index, Level.DOCKABLE );
+	        DockablePlaceholderList<DockableHandle>.Item newItem = handles.list().get( listIndex );
 	        newItem.setPlaceholderSet( newItem.getPlaceholderSet() );
 	        
 	        setHold( combination, hold );
@@ -1856,10 +1925,11 @@ public class FlapDockStation extends AbstractDockableStation {
     		boolean open = getFrontDockable() == child;
     		
     		int listIndex = handles.levelToBase( index, Level.DOCKABLE );
-    		PlaceholderList<DockableHandle>.Item oldItem = handles.list().get( listIndex );
+    		DockablePlaceholderList<DockableHandle>.Item oldItem = handles.list().get( listIndex );
     		remove( index );
+    		handles.list().remove( oldItem );
     		add( append, index );
-    		PlaceholderList<DockableHandle>.Item newItem = handles.list().get( listIndex );
+    		DockablePlaceholderList<DockableHandle>.Item newItem = handles.list().get( listIndex );
     		if( station ){
     			newItem.setPlaceholderMap( child.asDockStation().getPlaceholders() );
     		}
@@ -1897,6 +1967,26 @@ public class FlapDockStation extends AbstractDockableStation {
     	
     	return -1;
     }
+
+    private void checkVisibility(){
+    	boolean visible = isDockableVisible();
+    	if( visible != lastVisible ){
+    		lastVisible = visible;
+            
+            if( visible ){
+                if( oldFrontDockable != null )
+                    setFrontDockable( oldFrontDockable );
+            }
+            else{
+                oldFrontDockable = getFrontDockable();
+                setFrontDockable( null );
+                if( !isHold( oldFrontDockable ))
+                    oldFrontDockable = null;
+            }
+            
+            visibility.fire();
+    	}
+    }
     
     /**
      * This listener is added to the direct parent of the enclosing
@@ -1906,28 +1996,10 @@ public class FlapDockStation extends AbstractDockableStation {
      * @author Benjamin Sigg
      */
     private class VisibleListener extends DockStationAdapter{
-        /** The last known state. Used to react only if real changes happen */
-        private boolean visible = false;
-        
         @Override
         public void dockableVisibiltySet( DockStation station, Dockable dockable, boolean visible ) {
-            if( visible != this.visible ){
-                if( dockable == FlapDockStation.this ){
-                    this.visible = visible;
-                    
-                    if( visible ){
-                        if( oldFrontDockable != null )
-                            setFrontDockable( oldFrontDockable );
-                    }
-                    else{
-                        oldFrontDockable = getFrontDockable();
-                        setFrontDockable( null );
-                        if( !isHold( oldFrontDockable ))
-                            oldFrontDockable = null;
-                    }
-                    
-                    visibility.fire();
-                }
+        	if( dockable == FlapDockStation.this ){
+        		checkVisibility();
             }
         }
     }
@@ -1955,7 +2027,7 @@ public class FlapDockStation extends AbstractDockableStation {
      * Handles title and listeners that are associated with a {@link Dockable}.
      * @author Benjamin Sigg
      */
-    private class DockableHandle implements PlaceholderListItem{
+    private class DockableHandle implements PlaceholderListItem<Dockable>{
     	/** the element that is handled by this handler */
     	private Dockable dockable;
     	/** the title used */
@@ -2017,12 +2089,12 @@ public class FlapDockStation extends AbstractDockableStation {
     }
     
     private class ControllerListener implements FocusVetoListener, DockableFocusListener{
-        public FocusVeto vetoFocus( MouseFocusObserver controller, Dockable dockable ) {
+    	public FocusVeto vetoFocus( FocusController controller, Dockable dockable ){
             return FocusVeto.NONE;
         }
-        
-        public FocusVeto vetoFocus( MouseFocusObserver controller, DockTitle title ) {
-        	for( DockableHandle handle : handles.dockables() ){
+    	
+    	public FocusVeto vetoFocus( FocusController controller, DockTitle title ){
+    		for( DockableHandle handle : handles.dockables() ){
         		if( handle.getTitle() == title ){
         			return FocusVeto.VETO_NO_CONSUME;
         		}
@@ -2084,13 +2156,34 @@ public class FlapDockStation extends AbstractDockableStation {
         			DockTitle title = handle.getTitle();
 	        		
 		            if( getFrontDockable() == dockable && title.isActive() ){
-		                getController().setFocusedDockable( FlapDockStation.this, true );
+		                getController().setFocusedDockable( FlapDockStation.this, null, true );
 		                setFrontDockable( null );
 		            }
 		            else
-		                getController().setFocusedDockable( dockable, true );
+		                getController().setFocusedDockable( dockable, null, true );
         		}
         	}
         }
+    }
+    
+    /**
+     * The background algorithm of this {@link FlapDockStation}.
+     * @author Benjamin Sigg
+     */
+    private class Background extends BackgroundAlgorithm implements StationBackgroundComponent{
+    	/**
+    	 * Creates a new algorithm
+    	 */
+    	public Background(){
+    		super( StationBackgroundComponent.KIND, ThemeManager.BACKGROUND_PAINT + ".station.flap" );
+    	}
+
+		public DockStation getStation(){
+			return FlapDockStation.this;
+		}
+
+		public Component getComponent(){
+			return FlapDockStation.this.getComponent();
+		}
     }
 }

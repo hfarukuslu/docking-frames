@@ -25,11 +25,17 @@
  */
 package bibliothek.gui.dock.themes.basic;
 
-import java.awt.*;
+import java.awt.Component;
+import java.awt.Container;
+import java.awt.Dimension;
+import java.awt.GridLayout;
+import java.awt.Insets;
+import java.awt.Point;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.BorderFactory;
+import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.border.BevelBorder;
@@ -38,6 +44,8 @@ import javax.swing.border.Border;
 import bibliothek.gui.DockController;
 import bibliothek.gui.DockStation;
 import bibliothek.gui.Dockable;
+import bibliothek.gui.dock.displayer.DisplayerBackgroundComponent;
+import bibliothek.gui.dock.displayer.DisplayerDockBorder;
 import bibliothek.gui.dock.displayer.DisplayerFocusTraversalPolicy;
 import bibliothek.gui.dock.displayer.DockableDisplayerHints;
 import bibliothek.gui.dock.displayer.SingleTabDecider;
@@ -47,8 +55,13 @@ import bibliothek.gui.dock.station.DisplayerCollection;
 import bibliothek.gui.dock.station.DisplayerFactory;
 import bibliothek.gui.dock.station.DockableDisplayer;
 import bibliothek.gui.dock.station.DockableDisplayerListener;
+import bibliothek.gui.dock.themes.ThemeManager;
+import bibliothek.gui.dock.themes.border.BorderForwarder;
 import bibliothek.gui.dock.title.DockTitle;
+import bibliothek.gui.dock.util.BackgroundAlgorithm;
+import bibliothek.gui.dock.util.BackgroundPanel;
 import bibliothek.gui.dock.util.PropertyValue;
+import bibliothek.gui.dock.util.UIValue;
 
 
 /**
@@ -66,7 +79,7 @@ import bibliothek.gui.dock.util.PropertyValue;
  * @see DisplayerFactory
  * @author Benjamin Sigg
  */
-public class BasicDockableDisplayer extends JPanel implements DockableDisplayer{
+public class BasicDockableDisplayer extends BackgroundPanel implements DockableDisplayer{
     /** The content of this displayer */
     private Dockable dockable;
     /** The title on this displayer */
@@ -93,6 +106,15 @@ public class BasicDockableDisplayer extends JPanel implements DockableDisplayer{
     
     /** all listeners known to this displayer */
     private List<DockableDisplayerListener> listeners = new ArrayList<DockableDisplayerListener>();
+    
+    /** the background algorithm of this panel */
+    private Background background = new Background();
+    
+    /** the border strategy of this panel */
+    private DisplayerBorder baseBorder;
+    
+    /** the border strategy of the content panel of this displayer */
+    private DisplayerBorder contentBorder;
     
     /** this listener gets added to the current {@link SingleTabDecider} */
     private SingleTabDeciderListener singleTabListener = new SingleTabDeciderListener(){
@@ -123,7 +145,7 @@ public class BasicDockableDisplayer extends JPanel implements DockableDisplayer{
     private boolean singleTabShowing;
     
     /** the panel that shows the content of this displayer */
-    private JPanel content = new JPanel( null ){
+    private BackgroundPanel content = new BackgroundPanel( null, false, true ){
     	@Override
     	public void doLayout(){
 	    	BasicDockableDisplayer.this.doLayout( content );
@@ -161,7 +183,7 @@ public class BasicDockableDisplayer extends JPanel implements DockableDisplayer{
      * @param location the location of the title, can be <code>null</code>
      */
     public BasicDockableDisplayer( DockStation station, Dockable dockable, DockTitle title, Location location ){
-        super( new GridLayout( 1, 1 ) );
+        super( new GridLayout( 1, 1 ), true, false );
         init( station, dockable, title, location );
     }
    
@@ -176,7 +198,7 @@ public class BasicDockableDisplayer extends JPanel implements DockableDisplayer{
      * will be called.
      */
     protected BasicDockableDisplayer( DockStation station, boolean initialize ){
-    	super( new GridLayout( 1, 1 ) );
+    	super( new GridLayout( 1, 1 ), true, false );
     	if( initialize ){
     		init( station, null, null, Location.TOP );
     	}
@@ -193,8 +215,10 @@ public class BasicDockableDisplayer extends JPanel implements DockableDisplayer{
      */
     protected void init( DockStation station, Dockable dockable, DockTitle title, Location location ){
     	content.setOpaque( false );
+    	content.setBackground( background );
     	
     	setDecorator( new MinimalDecorator() );
+    	setBackground( background );
     	
         setTitleLocation( location );
         setDockable( dockable );
@@ -202,9 +226,10 @@ public class BasicDockableDisplayer extends JPanel implements DockableDisplayer{
         setFocusable( true );
         
         setFocusCycleRoot( true );
-        setFocusTraversalPolicy( 
-                new DockFocusTraversalPolicy( 
-                        new DisplayerFocusTraversalPolicy( this ), true ));
+        setFocusTraversalPolicy( new DockFocusTraversalPolicy( new DisplayerFocusTraversalPolicy( this ), true ));
+        
+        baseBorder = new DisplayerBorder( this, "basic.base" );
+        contentBorder = new DisplayerBorder( content, "basic.content" );
     }
     
     /**
@@ -254,6 +279,10 @@ public class BasicDockableDisplayer extends JPanel implements DockableDisplayer{
     	this.controller = controller;
     	decider.setProperties( controller );
     	decorator.setController( controller );
+    	background.setController( controller );
+    	baseBorder.setController( controller );
+    	contentBorder.setController( controller );
+    	
     	Component newComponent = decorator.getComponent();
     	
     	if( oldComponent != newComponent ){
@@ -270,15 +299,7 @@ public class BasicDockableDisplayer extends JPanel implements DockableDisplayer{
     public DockController getController() {
         return controller;
     }
-    /*
-    @Override
-    public void setBorder( Border border ){
-    	if( content == null )
-    		super.setBorder( border );
-    	else
-    		content.setBorder( border );
-    }
-    */
+    
     public void addDockableDisplayerListener( DockableDisplayerListener listener ){
 	    listeners.add( listener );	
     }
@@ -680,40 +701,66 @@ public class BasicDockableDisplayer extends JPanel implements DockableDisplayer{
 		return singleTabShowOuterBorder;
 	}
     
+    @Override
+    public void updateUI(){
+    	super.updateUI();
+    	updateBorder();
+    }
+    
     /**
      * Called when the hint, whether a border should be shown or not, has changed. 
      */
     protected void updateBorder(){
     	if( singleTabShowing ){
     		if( singleTabShowInnerBorder )
-    			content.setBorder( getDefaultBorder() );
+    			setContentBorder( getDefaultBorder() );
     		else
-    			content.setBorder( null );
+    			setContentBorder( null );
     		
     		if( singleTabShowOuterBorder )
-    			setBorder( getDefaultBorder() );
+    			setBaseBorder( getDefaultBorder() );
     		else
-    			setBorder( null );
+    			setBaseBorder( null );
     	}
     	else{
-    		content.setBorder( null );
+    		setContentBorder( null );
     		
     		if( respectBorderHint ){
                 boolean show = hints.getShowBorderHint();
                 
                 if( show ){
-                    setBorder( getDefaultBorder() );
+                	setBaseBorder( getDefaultBorder() );
                 }
                 else{
-                    setBorder( null );
+                	setBaseBorder( null );
                 }
             }
     		else{
     			if( defaultBorderHint )
-    				setBorder( getDefaultBorder() );
+    				setBaseBorder( getDefaultBorder() );
     			else
-    				setBorder( null );
+    				setBaseBorder( null );
     		}
+    	}
+    }
+    
+    /**
+     * Sets the border that wraps around the entire displayer.
+     * @param border the new border, can be <code>null</code>
+     */
+    public void setBaseBorder( Border border ){
+    	if( baseBorder != null ){
+    		baseBorder.setBorder( border );
+    	}
+    }
+    
+    /**
+     * Sets the border that wraps around the content component.
+     * @param border the new border, can be <code>null</code>
+     */
+    public void setContentBorder( Border border ){
+    	if( contentBorder != null ){
+    		contentBorder.setBorder( border );
     	}
     }
     
@@ -753,5 +800,45 @@ public class BasicDockableDisplayer extends JPanel implements DockableDisplayer{
             
             return defaultBorderHint;
         }
+    }
+    
+    /**
+     * The background of this {@link BasicDockableDisplayer}.
+     * @author Benjamin Sigg
+     */
+    private class Background extends BackgroundAlgorithm implements DisplayerBackgroundComponent{
+    	/**
+    	 * Creates a new object
+    	 */
+    	public Background(){
+    		super( DisplayerBackgroundComponent.KIND, ThemeManager.BACKGROUND_PAINT + ".displayer");
+    	}
+    	
+    	public Component getComponent(){
+    		return BasicDockableDisplayer.this;
+    	}
+    	
+    	public DockableDisplayer getDisplayer(){
+    		return BasicDockableDisplayer.this;
+    	}
+    }
+    
+    /**
+     * The border of this displayer.
+     * @author Benjamin Sigg
+     */
+    protected class DisplayerBorder extends BorderForwarder implements DisplayerDockBorder{
+    	/**
+    	 * Creates a new object.
+    	 * @param target the component whose border will be set
+    	 * @param idSuffix suffix for the identifier of this {@link UIValue}
+    	 */
+    	public DisplayerBorder( JComponent target, String idSuffix ){
+    		super( DisplayerDockBorder.KIND, ThemeManager.BORDER_MODIFIER + ".displayer." + idSuffix, target );
+    	}
+    	
+		public DockableDisplayer getDisplayer(){
+			return BasicDockableDisplayer.this;
+		}
     }
 }

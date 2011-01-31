@@ -33,9 +33,11 @@ import bibliothek.extension.gui.dock.theme.eclipse.RoundRectButton;
 import bibliothek.gui.DockController;
 import bibliothek.gui.DockUI;
 import bibliothek.gui.Dockable;
-import bibliothek.gui.dock.event.IconManagerListener;
 import bibliothek.gui.dock.station.stack.menu.AbstractCombinedMenu;
+import bibliothek.gui.dock.station.stack.tab.TabMenuDockIcon;
 import bibliothek.gui.dock.themes.basic.action.BasicTrigger;
+import bibliothek.gui.dock.util.BackgroundAlgorithm;
+import bibliothek.gui.dock.util.BackgroundPaint;
 
 /**
  * A menu used by the {@link EclipseTabPane} to select {@link Dockable}s.
@@ -45,15 +47,8 @@ public class EclipseMenu extends AbstractCombinedMenu{
 	private EclipseTabPane pane;
 	private RoundRectButton button;
 	
-	private IconManagerListener iconListener = new IconManagerListener(){
-		public void iconChanged( String key, Icon icon ){
-			if( DockUI.OVERFLOW_MENU_ICON.equals( key )){
-				if( button != null ){
-					button.getModel().setIcon( icon );
-				}
-			}
-		}
-	};
+	private TabMenuDockIcon icon;
+	private Icon currentIcon;
 	
 	/**
 	 * Creates a new menu.
@@ -62,27 +57,32 @@ public class EclipseMenu extends AbstractCombinedMenu{
 	public EclipseMenu( EclipseTabPane pane ){
 		super( pane, pane.getMenuHandler() );
 		this.pane = pane;
+		
+		icon = new TabMenuDockIcon( DockUI.OVERFLOW_MENU_ICON, this ){
+			protected void changed( Icon oldValue, Icon newValue ){
+				currentIcon = newValue;
+				if( button != null ){
+					button.getModel().setIcon( newValue );
+				}
+			}
+		};
 	}
 	
 	@Override
 	public void setController( DockController controller ){
-		DockController old = getController();
-		if( old != null ){
-			old.getIcons().remove( DockUI.OVERFLOW_MENU_ICON, iconListener );
-		}
-		
 		super.setController( controller );
-		
-		if( controller != null ){
-			controller.getIcons().add( DockUI.OVERFLOW_MENU_ICON, iconListener );
-			if( button != null ){
-				button.getModel().setIcon( controller.getIcons().getIcon( DockUI.OVERFLOW_MENU_ICON ) );
-			}
+		if( controller == null ){
+			icon.setManager(  null );
 		}
 		else{
-			if( button != null ){
-				button.getModel().setIcon( null );
-			}
+			icon.setManager( controller.getIcons() );
+		}
+	}
+	
+	@Override
+	protected void backgroundChanged( BackgroundPaint paint ){
+		if( button != null ){
+			button.getModel().setBackground( paint, getBackground() );
 		}
 	}
 	
@@ -93,14 +93,22 @@ public class EclipseMenu extends AbstractCombinedMenu{
         		open();
         	}
         };
-        button = new RoundRectButton( trigger );
         
-        DockController controller = getController();
-        if( controller != null ){
-        	button.getModel().setIcon( controller.getIcons().getIcon( DockUI.OVERFLOW_MENU_ICON ));
-        }
+        button = new RoundRectButton( trigger, null );
+        
+        button.getModel().setIcon( currentIcon );
         
         return button;
+	}
+	
+	@Override
+	protected void ensureComponent(){
+		boolean set = button == null;
+		super.ensureComponent();
+		if( set ){
+			BackgroundAlgorithm background = getBackground();
+	        button.getModel().setBackground( background.getPaint(), background );
+		}
 	}
 
 	@Override

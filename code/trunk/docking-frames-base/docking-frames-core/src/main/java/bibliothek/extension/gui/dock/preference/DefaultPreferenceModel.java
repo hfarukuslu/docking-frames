@@ -28,6 +28,7 @@ package bibliothek.extension.gui.dock.preference;
 import java.util.ArrayList;
 import java.util.List;
 
+import bibliothek.gui.DockController;
 import bibliothek.util.Path;
 
 /**
@@ -37,6 +38,10 @@ import bibliothek.util.Path;
  */
 public class DefaultPreferenceModel extends AbstractPreferenceModel{
     private List<Entry<?>> entries = new ArrayList<Entry<?>>();
+    
+    public DefaultPreferenceModel( DockController controller ){
+    	super( controller );
+    }
     
     public int getSize() {
         return entries.size();
@@ -80,6 +85,26 @@ public class DefaultPreferenceModel extends AbstractPreferenceModel{
     @Override
     public void setValueNatural( int index ) {
         getPreference( index ).read();
+    }
+    
+    @Override
+    public void addPreferenceModelListener( PreferenceModelListener listener ){
+    	if( !hasListeners() ){
+    		for( Entry<?> entry : entries ){
+    			entry.setListener( true );
+    		}
+    	}
+    	super.addPreferenceModelListener( listener );
+    }
+    
+    @Override
+    public void removePreferenceModelListener( PreferenceModelListener listener ){
+    	super.removePreferenceModelListener( listener );
+    	if( !hasListeners() ){
+    		for( Entry<?> entry : entries ){
+    			entry.setListener( false );
+    		}
+    	}
     }
     
     /**
@@ -226,7 +251,10 @@ public class DefaultPreferenceModel extends AbstractPreferenceModel{
         public Entry( Preference<V> preference, int index ){
             this.preference = preference;
             this.index = index;
-            preference.addPreferenceListener( this );
+            preference.setModel( DefaultPreferenceModel.this );
+            if( hasListeners() ){
+            	preference.addPreferenceListener( this );
+            }
         }
 
         public void changed( Preference<V> preference ) {
@@ -234,10 +262,27 @@ public class DefaultPreferenceModel extends AbstractPreferenceModel{
         }
         
         /**
+         * Sets whether <code>this</code> is listening to the changes
+         * of {@link #preference} or not.
+         * @param listening whether to listen
+         */
+        public void setListener( boolean listening ){
+        	if( listening ){
+        		preference.addPreferenceListener( this );
+        	}
+        	else{
+        		preference.removePreferenceListener( this );
+        	}
+        }
+        
+        /**
          * Destroys this entry.
          */
         public void kill(){
-            preference.removePreferenceListener( this );
+        	preference.setModel( null );
+        	if( hasListeners() ){
+        		preference.removePreferenceListener( this );
+        	}
         }
         
         /**

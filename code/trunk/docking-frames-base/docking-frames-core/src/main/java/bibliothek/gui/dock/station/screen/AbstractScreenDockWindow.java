@@ -25,6 +25,7 @@
  */
 package bibliothek.gui.dock.station.screen;
 
+import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.Cursor;
@@ -36,25 +37,30 @@ import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 
-import javax.swing.BorderFactory;
 import javax.swing.Icon;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.SwingUtilities;
-import javax.swing.border.BevelBorder;
 
+import bibliothek.gui.DockController;
 import bibliothek.gui.Dockable;
 import bibliothek.gui.dock.ScreenDockStation;
 import bibliothek.gui.dock.event.DockableAdapter;
 import bibliothek.gui.dock.event.DockableListener;
+import bibliothek.gui.dock.security.SecureContainer;
 import bibliothek.gui.dock.station.DockableDisplayer;
-import bibliothek.gui.dock.station.OverpaintablePanel;
 import bibliothek.gui.dock.station.StationPaint;
+import bibliothek.gui.dock.station.screen.ScreenDockWindowBorder.Position;
 import bibliothek.gui.dock.station.support.CombinerTarget;
+import bibliothek.gui.dock.themes.ThemeManager;
+import bibliothek.gui.dock.themes.border.BorderForwarder;
+import bibliothek.gui.dock.util.BackgroundAlgorithm;
+import bibliothek.gui.dock.util.BackgroundPanel;
 
 /**
  * This abstract implementation of {@link ScreenDockWindow} uses a {@link DockableDisplayer}
@@ -71,7 +77,7 @@ public abstract class AbstractScreenDockWindow extends DisplayerScreenDockWindow
     private DockableDisplayer displayer;
 
     /** the parent of {@link #displayer}, used to paint */
-    private OverpaintablePanel content;
+    private SecureContainer content;
 
     /** how to paint a combination */
     private CombinerTarget combination;
@@ -81,6 +87,18 @@ public abstract class AbstractScreenDockWindow extends DisplayerScreenDockWindow
     
     /** the explicit set text */
     private String titleText = null;
+    
+    /** the background algorithm for this window */
+    private BackgroundAlgorithm background;
+    
+    /** the panel which paints the background */
+    private BackgroundPanel contentBackground;
+    
+    /** the default border of this window */
+    private ScreenDockWindowBorder border;
+    
+    /** the current modifier of the border */
+    private WindowBorder borderModifier;
     
     /** a listener added to the <code>Dockable</code> of this window, updates icon and title text */
     private DockableListener listener = new DockableAdapter(){
@@ -165,6 +183,7 @@ public abstract class AbstractScreenDockWindow extends DisplayerScreenDockWindow
         this.window = window;
         
         content = createContent();
+        content.setController( getController() );
         contentParent.setLayout( new GridLayout( 1, 1 ) );
         contentParent.add( content );
 
@@ -173,14 +192,19 @@ public abstract class AbstractScreenDockWindow extends DisplayerScreenDockWindow
 
         if( resizeable ){
             if( parent instanceof JComponent ){
-                ((JComponent)parent).setBorder( BorderFactory.createCompoundBorder( 
-                        BorderFactory.createBevelBorder( BevelBorder.RAISED ),
-                        BorderFactory.createEmptyBorder( 1, 1, 1, 1 )));
+            	border = new ScreenDockWindowBorder( this, (JComponent)parent );
+            	border.setController( getController() );
+            	borderModifier = new WindowBorder( (JComponent)parent );
+            	borderModifier.setBorder( border );
+            	borderModifier.setController( getController() );
+            	
+            	((JComponent)parent).setBorder( border );
             }
 
             Listener listener = new Listener();
             parent.addMouseListener( listener );
             parent.addMouseMotionListener( listener );
+            parent.addComponentListener( listener );
         }
         
         window.addComponentListener( new ComponentAdapter() {
@@ -197,10 +221,31 @@ public abstract class AbstractScreenDockWindow extends DisplayerScreenDockWindow
         
         addScreenDockWindowListener( windowListener );
     }
+    
+    @Override
+    public void setController( DockController controller ){
+    	super.setController( controller );
+    	content.setController( controller );
+    	if( border != null ){
+    		border.setController( controller );
+    	}
+    	if( borderModifier != null ){
+    		borderModifier.setController( controller );
+    	}
+    }
 
     @Override
     protected Component getWindowComponent() {
         return window;
+    }
+    
+    @Override
+    protected void setBackground( BackgroundAlgorithm background ){
+	    this.background = background;
+	    if( contentBackground != null ){
+	    	contentBackground.setBackground( background );
+	    }
+	    window.repaint();
     }
 
     @Override
@@ -410,24 +455,33 @@ public abstract class AbstractScreenDockWindow extends DisplayerScreenDockWindow
      * This method is invoked by the constructor.
      * @return the new content pane
      */
-    protected OverpaintablePanel createContent(){
-        OverpaintablePanel panel = new OverpaintablePanel(){
+    protected SecureContainer createContent(){
+    	contentBackground = new BackgroundPanel( true, false );
+    	contentBackground.setBackground( background );
+    	
+    	SecureContainer panel = new SecureContainer(){
             @Override
             protected void paintOverlay( Graphics g ) {
             	if( combination != null ){
                     ScreenDockStation station = getStation();
-                    StationPaint paint = station.getPaint();
-                    Insets insets = getInsets();
-
-                    Rectangle bounds = new Rectangle( 0, 0, getWidth(), getHeight() );
-                    Rectangle insert = new Rectangle( 2*insets.left, 2*insets.top, 
-                            getWidth() - 2*(insets.left+insets.right),
-                            getHeight() - 2*(insets.top+insets.bottom ));
-
-                    combination.paint( g, paint, bounds, insert );
+                    StationPaint paint = station.getPaint().get();
+                    if( paint != null ){
+	                    Insets insets = getInsets();
+	
+	                    Rectangle bounds = new Rectangle( 0, 0, getWidth(), getHeight() );
+	                    Rectangle insert = new Rectangle( 2*insets.left, 2*insets.top, 
+	                            getWidth() - 2*(insets.left+insets.right),
+	                            getHeight() - 2*(insets.top+insets.bottom ));
+	
+	                    combination.paint( g, paint, bounds, insert );
+                    }
                 }
             }
         };
+        
+        panel.setContentPane( contentBackground );
+        panel.getBasePane().setLayout( new BorderLayout() );
+        panel.getBasePane().add( contentBackground, BorderLayout.CENTER );
 
         return panel;
     }
@@ -448,16 +502,69 @@ public abstract class AbstractScreenDockWindow extends DisplayerScreenDockWindow
     public DockableDisplayer getDisplayer() {
         return displayer;
     }
+    
+    /**
+     * Represents the border of this window
+     * @author Benjamin Sigg
+     */
+    private class WindowBorder extends BorderForwarder implements ScreenDockWindowDockBorder{
+    	public WindowBorder( JComponent target ){
+    		super( ScreenDockWindowDockBorder.KIND, ThemeManager.BORDER_MODIFIER + ".screen.window", target );
+    	}
+    	
+    	public ScreenDockWindow getWindow(){
+    		return AbstractScreenDockWindow.this;
+    	}
+    }
 
-    private enum Position{ N, E, S, W, NE, SW, NW, SE, MOVE, NOTHING };
-
-    private class Listener implements MouseListener, MouseMotionListener{
+    private class Listener implements MouseListener, MouseMotionListener, ComponentListener{
         private boolean pressed = false;
         private Position position = Position.NOTHING;
 
         private Point start;
         private Rectangle bounds;
 
+        private void updateBorder(){
+        	if( border != null ){
+        		if( pressed ){
+        			border.setMousePressed( position );
+        			border.setMouseOver( null );
+        		}
+        		else{
+        			border.setMousePressed( null );
+        			border.setMouseOver( position );
+        		}
+        		
+            	border.setCornerSize( corner() );
+            	border.setMoveSize( getDisplayerParent().getWidth()/3 );
+        	}
+        }
+        
+        public void componentHidden( ComponentEvent e ){
+        	// ignore
+        }
+        
+        public void componentMoved( ComponentEvent e ){
+        	// ignore
+        }
+        public void componentResized( ComponentEvent e ){
+        	updateBorder();
+        }
+        public void componentShown( ComponentEvent e ){
+	        // ignore	
+        }
+        
+        private int corner(){
+            Container component = getDisplayerParent();
+            Insets insets = component.getInsets();
+
+        	int corner = Math.max( Math.max( insets.top, insets.bottom ), Math.max( insets.left, insets.right ) ) * 5;
+        	corner = Math.max( 25, Math.min( 50, corner ) );
+        	
+        	corner = Math.min( Math.min( component.getHeight()/2, component.getWidth()/3 ), corner );
+        	return corner;
+        }
+        
         public void mouseClicked( MouseEvent e ) {
             // do nothing
         }
@@ -470,6 +577,7 @@ public abstract class AbstractScreenDockWindow extends DisplayerScreenDockWindow
                     start = e.getPoint();
                     convertPointToScreen( start, e.getComponent() );
                     bounds = getWindowBounds();
+                    updateBorder();
                 }
             }
         }
@@ -495,6 +603,7 @@ public abstract class AbstractScreenDockWindow extends DisplayerScreenDockWindow
             if( !pressed && e.getButton() == MouseEvent.NOBUTTON ){
                 setCursor( Cursor.getDefaultCursor() );
                 position = Position.NOTHING;
+                updateBorder();
             }
         }
 
@@ -544,6 +653,7 @@ public abstract class AbstractScreenDockWindow extends DisplayerScreenDockWindow
                 }
 
                 setWindowBounds( bounds, false );
+                updateBorder();
                 invalidate();
                 validate();
             }
@@ -560,13 +670,15 @@ public abstract class AbstractScreenDockWindow extends DisplayerScreenDockWindow
             Insets insets = component.getInsets();
 
             boolean valid = e.getComponent() == component && e.getY() <= insets.top || e.getY() >= component.getHeight() - insets.bottom ||
-            e.getX() <= insets.left || e.getX() >= component.getWidth() - insets.right;
+            	e.getX() <= insets.left || e.getX() >= component.getWidth() - insets.right;
 
             if( valid ){
-                boolean top = e.getY() <= insets.top * 5;
-                boolean left = e.getX() <= insets.left * 5;
-                boolean bottom = e.getY() >= component.getHeight() - insets.bottom * 5;
-                boolean right = e.getX() >= component.getWidth() - insets.right * 5;
+            	int corner = corner();
+            	
+                boolean top = e.getY() <= corner;
+                boolean left = e.getX() <= corner;
+                boolean bottom = e.getY() >= component.getHeight() - corner;
+                boolean right = e.getX() >= component.getWidth() - corner;
 
                 if( top && left ){
                     setCursor( Cursor.getPredefinedCursor( Cursor.NW_RESIZE_CURSOR ) );
@@ -616,7 +728,7 @@ public abstract class AbstractScreenDockWindow extends DisplayerScreenDockWindow
                 setCursor( Cursor.getDefaultCursor() );
                 position = Position.NOTHING;
             }
+            updateBorder();
         }
     }
-
 }

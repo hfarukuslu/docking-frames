@@ -49,16 +49,11 @@ import bibliothek.gui.dock.title.DockTitle.Orientation;
  *
  * @param <D> The type of action observed by this model
  */
-public abstract class BasicHandler<D extends StandardDockAction> implements BasicTrigger, BasicTitleViewItem<JComponent> {
-    /** the action which is observed */
-    private D action;
-    /** the model to which all readings from the action are sent */
-    private BasicButtonModel model;
-    /** the dockable for which the action is displayed */
-    private Dockable dockable;
+public abstract class BasicHandler<D extends StandardDockAction> extends AbstractBasicHandler<D, BasicButtonModel> implements BasicTrigger, BasicTitleViewItem<JComponent> {
     
     /** a listener to the action */
     private Listener listener;
+    
     
     /**
      * Creates a new handler.
@@ -66,52 +61,12 @@ public abstract class BasicHandler<D extends StandardDockAction> implements Basi
      * @param dockable the dockable for which the action is shown
      */
     public BasicHandler( D action, Dockable dockable ){
-        if( action == null )
-            throw new IllegalArgumentException( "Action must not be null" );
-        
-        this.dockable = dockable;
-        this.action = action;
-    }
-    
-    /**
-     * Sets the model to which all properties of the {@link #getAction() action}
-     * are transfered.
-     * @param model the model
-     */
-    public void setModel( BasicButtonModel model ) {
-        this.model = model;
-    }
-    
-    /**
-     * Gets the model of this handler.
-     * @return the model
-     * @see #setModel(BasicButtonModel)
-     */
-    public BasicButtonModel getModel() {
-        return model;
-    }
-    
-    /**
-     * Gest the action which is monitored by this handler.
-     * @return the observed action
-     */
-    public D getAction() {
-        return action;
-    }
-    
-    /**
-     * Gets the {@link Dockable} for which the {@link #getAction() action}
-     * is shown.
-     * @return the dockable
-     */
-    public Dockable getDockable() {
-        return dockable;
+        super( action, dockable );
     }
     
     public JComponent getItem() {
-        return model.getOwner();
+        return getModel().getOwner();
     }
-    
     
     public void setBackground( Color background ) {
         Component item = getItem();
@@ -126,26 +81,35 @@ public abstract class BasicHandler<D extends StandardDockAction> implements Basi
     }
     
     public void setOrientation( Orientation orientation ) {
-        model.setOrientation( orientation );
+        getModel().setOrientation( orientation );
     }
     
     public abstract void triggered();
     
     public void bind(){
-        if( listener == null )
-            listener = createListener();
-        
-        listener.updateTooltip();
-        
-        model.setIcon( action.getIcon( dockable ) );
-        model.setDisabledIcon( action.getDisabledIcon( dockable ) );
-        model.setEnabled( action.isEnabled( dockable ) );
-        
-        action.addDockActionListener( listener );
+    	if( listener == null )
+    		listener = createListener();
+
+    	listener.updateTooltip();
+
+    	BasicButtonModel model = getModel();
+    	StandardDockAction action = getAction();
+    	Dockable dockable = getDockable();
+    	
+    	model.setIcon( action.getIcon( dockable ) );
+    	model.setDisabledIcon( action.getDisabledIcon( dockable ) );
+    	model.setEnabled( action.isEnabled( dockable ) );
+    	model.setDockableRepresentative( action.getDockableRepresentation( dockable ) );
+    	
+    	action.addDockActionListener( listener );
+    	
+    	super.bind();
     }
     
     public void unbind(){
-        action.removeDockActionListener( listener );
+    	super.unbind();
+    	getModel().setDockableRepresentative( null );
+    	getAction().removeDockActionListener( listener );
     }
     
     /**
@@ -163,39 +127,53 @@ public abstract class BasicHandler<D extends StandardDockAction> implements Basi
      */
     protected class Listener implements StandardDockActionListener{
         public void actionDisabledIconChanged( StandardDockAction action, Set<Dockable> dockables ) {
-            if( dockables.contains( dockable ))
-                model.setDisabledIcon( action.getDisabledIcon( dockable ) );
+        	Dockable dockable = getDockable();
+        	if( dockables.contains( dockable ))
+                getModel().setDisabledIcon( action.getDisabledIcon( dockable ) );
         }
 
         public void actionEnabledChanged( StandardDockAction action, Set<Dockable> dockables ) {
+        	Dockable dockable = getDockable();
             if( dockables.contains( dockable ))
-                model.setEnabled( action.isEnabled( dockable ) );
+            	getModel().setEnabled( action.isEnabled( dockable ) );
         }
 
         public void actionIconChanged( StandardDockAction action, Set<Dockable> dockables ) {
+        	Dockable dockable = getDockable();
             if( dockables.contains( dockable ))
-                model.setIcon( action.getIcon( dockable ));
+            	getModel().setIcon( action.getIcon( dockable ));
         }
 
         public void actionTextChanged( StandardDockAction action, Set<Dockable> dockables ) {
+        	Dockable dockable = getDockable();
             if( dockables.contains( dockable ))
                 updateTooltip();
         }
 
         public void actionTooltipTextChanged( StandardDockAction action, Set<Dockable> dockables ) {
+        	Dockable dockable = getDockable();
             if( dockables.contains( dockable ))
                 updateTooltip();
+        }
+        
+        public void actionRepresentativeChanged( StandardDockAction action, Set<Dockable> dockables ){
+	        Dockable dockable = getDockable();
+	        if( dockables.contains( dockable ))
+	        	getModel().setDockableRepresentative( action.getDockableRepresentation( dockable ) );
         }
         
         /**
          * Changes the tooltip of the model.
          */
         private void updateTooltip(){
+        	Dockable dockable = getDockable();
+        	StandardDockAction action = getAction();
             String tooltip = action.getTooltipText( dockable );
             if( tooltip == null || tooltip.length() == 0 )
                 tooltip = action.getText( dockable );
             
-            model.setToolTipText( tooltip );
+            getModel().setToolTipText( tooltip );
         }
     }
+
 }

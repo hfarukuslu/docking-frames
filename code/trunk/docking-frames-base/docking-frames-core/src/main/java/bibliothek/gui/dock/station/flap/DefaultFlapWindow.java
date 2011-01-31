@@ -26,6 +26,7 @@
 
 package bibliothek.gui.dock.station.flap;
 
+import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.Cursor;
@@ -51,15 +52,21 @@ import javax.swing.JRootPane;
 import javax.swing.SwingUtilities;
 import javax.swing.border.BevelBorder;
 
+import bibliothek.gui.DockController;
+import bibliothek.gui.DockStation;
 import bibliothek.gui.Dockable;
 import bibliothek.gui.dock.FlapDockStation;
 import bibliothek.gui.dock.FlapDockStation.Direction;
+import bibliothek.gui.dock.security.SecureContainer;
 import bibliothek.gui.dock.station.DockableDisplayer;
 import bibliothek.gui.dock.station.DockableDisplayerListener;
-import bibliothek.gui.dock.station.OverpaintablePanel;
 import bibliothek.gui.dock.station.StationChildHandle;
+import bibliothek.gui.dock.station.StationPaint;
+import bibliothek.gui.dock.themes.ThemeManager;
 import bibliothek.gui.dock.title.DockTitle;
 import bibliothek.gui.dock.title.DockTitleVersion;
+import bibliothek.gui.dock.util.BackgroundAlgorithm;
+import bibliothek.gui.dock.util.BackgroundPanel;
 
 /**
  * This window pops up if the user presses one of the buttons of a 
@@ -91,7 +98,13 @@ public class DefaultFlapWindow implements FlapWindow, MouseListener, MouseMotion
 
 	/** the window on which this {@link DefaultFlapWindow} is shown */
 	private Parent window;
+	
+	/** the parent of the {@link #contentPane} */
+	private SecureContainer contentContainer;
 
+	/** the background algorithm */
+	private Background background = new Background();
+	
 	/**
 	 * Constructs a new window.
 	 * @param station the station which manages this window
@@ -107,18 +120,28 @@ public class DefaultFlapWindow implements FlapWindow, MouseListener, MouseMotion
 	}
 
 	private void init(){
-		OverpaintablePanel content = new OverpaintablePanel(){
+		contentContainer = new SecureContainer(){
 			@Override
 			protected void paintOverlay( Graphics g ){
 				if( dropInfo != null && dropInfo.getCombineTarget() != null && dropInfo.isDraw() ) {
 					Rectangle bounds = new Rectangle(0, 0, getWidth(), getHeight());
-					dropInfo.getCombineTarget().paint( g, DefaultFlapWindow.this.station.getPaint(), bounds, bounds );
+					StationPaint paint = DefaultFlapWindow.this.station.getPaint().get();
+					if( paint != null ){
+						dropInfo.getCombineTarget().paint( g, paint, bounds, bounds );
+					}
 				}
 			}
 		};
-
-		window.setContentPane(content);
-		contentPane = content.getContentPane();
+		
+		BackgroundPanel content = new BackgroundPanel( true, false );
+		content.setBackground( background );
+		contentContainer.getBasePane().setLayout( new BorderLayout() );
+		contentContainer.getBasePane().add( content, BorderLayout.CENTER );
+		contentContainer.setContentPane( content );
+		
+		window.setContentPane(contentContainer);
+		contentPane = contentContainer.getContentPane();
+		contentPane.setOpaque( false );
 
 		contentPane.setBorder(BorderFactory.createBevelBorder(BevelBorder.RAISED));
 		contentPane.addMouseListener(this);
@@ -351,6 +374,11 @@ public class DefaultFlapWindow implements FlapWindow, MouseListener, MouseMotion
 	protected Container getDisplayerParent(){
 		return contentPane;
 	}
+	
+	public void setController( DockController controller ){
+		background.setController( controller );
+		contentContainer.setController( controller );
+	}
 
 	/**
 	 * Makes a guess how big the insets around the current {@link Dockable}
@@ -492,6 +520,31 @@ public class DefaultFlapWindow implements FlapWindow, MouseListener, MouseMotion
 
 	public void mouseMoved( MouseEvent e ){
 		// do nothing
+	}
+	
+	/**
+	 * The background algorithm of this window
+	 * @author Benjamin Sigg
+	 */
+	private class Background extends BackgroundAlgorithm implements FlapWindowBackgroundComponent{
+		/**
+		 * Creates a new algorithm
+		 */
+		public Background(){
+			super( FlapWindowBackgroundComponent.KIND, ThemeManager.BACKGROUND_PAINT + ".station.flap.window" );
+		}
+		
+		public FlapWindow getWindow(){
+			return DefaultFlapWindow.this;
+		}
+
+		public DockStation getStation(){
+			return station;
+		}
+
+		public Component getComponent(){
+			return window.asComponent();
+		}
 	}
 
 	/**

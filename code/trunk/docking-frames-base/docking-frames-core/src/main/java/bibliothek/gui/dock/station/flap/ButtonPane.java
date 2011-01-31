@@ -32,18 +32,18 @@ import java.awt.EventQueue;
 import java.awt.Graphics;
 import java.awt.Insets;
 
-import javax.swing.JPanel;
-
 import bibliothek.gui.Dockable;
 import bibliothek.gui.dock.FlapDockStation;
 import bibliothek.gui.dock.FlapDockStation.Direction;
-import bibliothek.gui.dock.station.OverpaintablePanel;
+import bibliothek.gui.dock.security.SecureContainer;
 import bibliothek.gui.dock.title.DockTitle;
+import bibliothek.gui.dock.util.BackgroundAlgorithm;
+import bibliothek.gui.dock.util.BackgroundPanel;
 
 /**
  * This panel is used by the {@link FlapDockStation} to display some button-titles.
  */
-public class ButtonPane extends OverpaintablePanel{
+public class ButtonPane extends SecureContainer{
     /** The owner of this panel */
     private FlapDockStation station;
     
@@ -53,13 +53,25 @@ public class ButtonPane extends OverpaintablePanel{
     /** whether {@link #resetTitles()} has been called but not yet executed */
     private boolean resetStarted = false;
     
+    /** the content pane */
+    private Content content;
+    
     /**
      * Constructs a new panel.
      * @param station The owner
      */
     public ButtonPane( FlapDockStation station ){
-        setBasePane( new Content() );
+    	content = new Content();
+        setBasePane( content );
         this.station = station;
+    }
+    
+    /**
+     * Sets the background algorithm of this panel.
+     * @param background the algorithm
+     */
+    public void setBackground( BackgroundAlgorithm background ){
+    	content.setBackground( background );
     }
     
     /**
@@ -194,7 +206,7 @@ public class ButtonPane extends OverpaintablePanel{
                 }
             }
             
-            station.getPaint().drawInsertionLine( g, station, x1, y1, x2, y2 );
+            station.getPaint().drawInsertionLine( g, x1, y1, x2, y2 );
         }
     }
     
@@ -286,14 +298,14 @@ public class ButtonPane extends OverpaintablePanel{
      * The direct parent of the buttons-titles. 
      * @author Benjamin Sigg
      */
-    private class Content extends JPanel{
+    private class Content extends BackgroundPanel{
         /**
          * Creates a new panel
          */
         public Content(){
-            super( null );
+        	super( null, true, false );
         }
-        
+       
         @Override
         public void doLayout() {
             Insets insets = getInsets();

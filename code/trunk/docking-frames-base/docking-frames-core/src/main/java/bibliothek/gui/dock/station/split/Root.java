@@ -32,7 +32,6 @@ import java.util.Map;
 
 import bibliothek.gui.Dockable;
 import bibliothek.gui.dock.SplitDockStation;
-import bibliothek.gui.dock.station.split.SplitDockTree.Key;
 
 /**
  * The root of the tree that represents the internal structure of a 
@@ -88,18 +87,25 @@ public class Root extends VisibleSplitNode{
      * @param child the child of the root, can be <code>null</code>
      */
     public void setChild( SplitNode child ){
-        if( this.child != null )
-            this.child.setParent( null );
-        this.child = child;
-        if( child != null ){
-            child.delete( false );
-            child.setParent( this );
-        }
-        
-        treeChanged();
-        
-        getAccess().getOwner().revalidate();
-        getAccess().getOwner().repaint();
+    	if( this.child != child ){
+	        if( this.child != null )
+	            this.child.setParent( null );
+	        this.child = child;
+	        if( child != null ){
+	            child.delete( false );
+	            child.setParent( this );
+	        }
+	        
+	        treeChanged();
+	        if( child != null ){
+	        	ensureIdUniqueAsync();
+	        }
+	        
+	        getAccess().getOwner().revalidate();
+	        getAccess().getOwner().repaint();
+	        
+	        getAccess().repositioned( this );
+    	}
     }
     
     /**
@@ -125,6 +131,19 @@ public class Root extends VisibleSplitNode{
             setChild( child );
         else
             throw new IllegalArgumentException( "Location invalid: " + location );
+    }
+    
+    @Override
+    public int getMaxChildrenCount(){
+    	return 1;
+    }
+    
+    @Override
+    public SplitNode getChild( int location ){
+	    if( location == 0 ){
+	    	return getChild();
+	    }
+	    return null;
     }
     
     @Override
@@ -195,7 +214,7 @@ public class Root extends VisibleSplitNode{
     }
     
     @Override
-    public void evolve( Key key, boolean checkValidity, Map<Leaf, Dockable> linksToSet ){
+    public void evolve( SplitDockTree<Dockable>.Key key, boolean checkValidity, Map<Leaf, Dockable> linksToSet ){
     	setChild( create( key, checkValidity, linksToSet ) );
     }
     
@@ -211,13 +230,8 @@ public class Root extends VisibleSplitNode{
     @Override
     public boolean insert( SplitDockPathProperty property, int depth, Dockable dockable ) {
         if( child == null ){
-        	int size = property.size();
-        	long id = -1;
-        	if( size > 0 ){
-        		id = property.getNode( size-1 ).getId();
-        	}
-        	
-            Leaf leaf = create( dockable, id );
+        	long id = property.getLeafId();
+        	Leaf leaf = create( dockable, id );
             if( leaf == null )
                 return false;
             setChild( leaf );

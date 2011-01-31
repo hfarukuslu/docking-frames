@@ -25,18 +25,42 @@
  */
 package bibliothek.extension.gui.dock.theme.eclipse.stack;
 
-import java.awt.*;
-import java.awt.event.*;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.GridLayout;
+import java.awt.Insets;
+import java.awt.Rectangle;
+import java.awt.Window;
+import java.awt.event.HierarchyEvent;
+import java.awt.event.HierarchyListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 
-import javax.swing.*;
-import javax.swing.border.*;
+import javax.swing.JComponent;
+import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
+import javax.swing.border.Border;
 
-import bibliothek.extension.gui.dock.theme.*;
-import bibliothek.extension.gui.dock.theme.eclipse.stack.tab.*;
-import bibliothek.gui.*;
-import bibliothek.gui.dock.station.stack.*;
-import bibliothek.gui.dock.station.stack.tab.*;
-import bibliothek.gui.dock.util.*;
+import bibliothek.extension.gui.dock.theme.EclipseTheme;
+import bibliothek.extension.gui.dock.theme.eclipse.stack.tab.BaseTabComponent;
+import bibliothek.extension.gui.dock.theme.eclipse.stack.tab.BorderedComponent;
+import bibliothek.extension.gui.dock.theme.eclipse.stack.tab.TabComponent;
+import bibliothek.extension.gui.dock.theme.eclipse.stack.tab.TabPainter;
+import bibliothek.extension.gui.dock.theme.eclipse.stack.tab.TabPanePainter;
+import bibliothek.gui.DockController;
+import bibliothek.gui.DockStation;
+import bibliothek.gui.Dockable;
+import bibliothek.gui.dock.station.stack.CombinedStackDockComponent;
+import bibliothek.gui.dock.station.stack.CombinedStackDockContentPane;
+import bibliothek.gui.dock.station.stack.StackDockComponent;
+import bibliothek.gui.dock.station.stack.StackDockComponentBorder;
+import bibliothek.gui.dock.station.stack.StackDockComponentContentBorder;
+import bibliothek.gui.dock.station.stack.tab.LonelyTabPaneComponent;
+import bibliothek.gui.dock.station.stack.tab.TabPane;
+import bibliothek.gui.dock.station.stack.tab.TabPaneListener;
+import bibliothek.gui.dock.themes.ThemeManager;
+import bibliothek.gui.dock.themes.border.BorderForwarder;
+import bibliothek.gui.dock.util.PropertyValue;
 
 /**
  * The {@link EclipseTabPane} uses a generic {@link TabPainter} to create its
@@ -115,6 +139,7 @@ public class EclipseTabPane extends CombinedStackDockComponent<EclipseTab, Eclip
 	private DockStation station;
 	private EclipseTheme theme;
 	private TabPanePainter painter;
+	private BorderForwarder border;
 	
 	/**
 	 * Creates a new pane.
@@ -159,6 +184,7 @@ public class EclipseTabPane extends CombinedStackDockComponent<EclipseTab, Eclip
 		super.setController( controller );
 		tabPainter.setProperties( controller );
 		paintIcons.setProperties( controller );
+		getBorderForwarder().setController( controller );
 		
 		if( painter != null )
 			painter.setController( controller );
@@ -266,10 +292,33 @@ public class EclipseTabPane extends CombinedStackDockComponent<EclipseTab, Eclip
 			border = painter.getFullBorder( this, controller, selection );
 		}
 		
-		getComponent().setBorder( border );
+		getBorderForwarder().setBorder( border );
 		repaint();
 	}
 	
+	private BorderForwarder getBorderForwarder(){
+		if( border == null ){
+			border = createBorderModifier( getComponent() );
+			border.setController( getController() );
+		}
+		return border;
+	}
+	
+	/**
+	 * Creates the {@link BorderForwarder} that is used to set the border of this
+	 * panel.
+	 * @param target the target component, not <code>null</code>
+	 * @return the new forwarder, not <code>null</code>
+	 */
+	protected BorderForwarder createBorderModifier( JComponent target ){
+		return new TabPaneBorder( target );
+	}
+	
+	@Override
+	protected BorderForwarder createContentBorderModifier( Dockable dockable, JComponent component ){
+		return new TabContentBorder( dockable, component );
+	}
+		
 	private void updatePaintIcons(){
 		boolean paintIconsWhenInactive = paintIcons.getValue();
 		
@@ -331,8 +380,7 @@ public class EclipseTabPane extends CombinedStackDockComponent<EclipseTab, Eclip
 	 * @param border the new border, may be <code>null</code>
 	 */
 	public void setContentBorderAt( int index, Border border ){
-		JComponent layer = getLayerAt( index );
-		layer.setBorder( border );
+		getContentAt( index ).setBorder( border );
 	}
 	
 	@Override
@@ -346,7 +394,7 @@ public class EclipseTabPane extends CombinedStackDockComponent<EclipseTab, Eclip
 	public JComponent getLayerAt( int index ){
 		return (JComponent)super.getLayerAt( index );
 	}
-	
+
 	/**
 	 * Gets an estimate of the {@link Insets} between the selected
 	 * {@link Dockable} and this whole component.
@@ -385,5 +433,36 @@ public class EclipseTabPane extends CombinedStackDockComponent<EclipseTab, Eclip
 	
 	public boolean isSingleTabComponent(){
 		return true;
+	}
+	
+	/**
+	 * Used by a {@link EclipseTabPane} to modify its border.
+	 * @author Benjamin Sigg
+	 */
+	private class TabPaneBorder extends BorderForwarder implements StackDockComponentBorder{
+		public TabPaneBorder( JComponent target ){
+			super( StackDockComponentBorder.KIND, ThemeManager.BORDER_MODIFIER + ".stack.eclipse", target );
+		}
+
+		public StackDockComponent getStackComponent(){
+			return EclipseTabPane.this;
+		}
+	}
+	
+	private class TabContentBorder extends BorderForwarder implements StackDockComponentContentBorder{
+		private Dockable dockable;
+		
+		public TabContentBorder( Dockable dockable, JComponent target ){
+			super( StackDockComponentContentBorder.KIND, ThemeManager.BORDER_MODIFIER + ".stack.eclipse.content", target );
+			this.dockable = dockable;
+		}
+		
+		public StackDockComponent getStackComponent(){
+			return EclipseTabPane.this;
+		}
+		
+		public Dockable getDockable(){
+			return dockable;
+		}
 	}
 }

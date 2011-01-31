@@ -26,14 +26,14 @@
 
 package bibliothek.gui;
 
+import java.awt.AWTEvent;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Container;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.Rectangle;
-import java.awt.RenderingHints;
+import java.awt.Toolkit;
+import java.awt.event.AWTEventListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.IOException;
@@ -59,16 +59,18 @@ import bibliothek.gui.dock.station.Combiner;
 import bibliothek.gui.dock.station.DisplayerFactory;
 import bibliothek.gui.dock.station.StationPaint;
 import bibliothek.gui.dock.themes.BasicTheme;
+import bibliothek.gui.dock.themes.DefaultStationPaintValue;
 import bibliothek.gui.dock.themes.NoStackTheme;
 import bibliothek.gui.dock.themes.ThemeFactory;
+import bibliothek.gui.dock.themes.ThemeManager;
 import bibliothek.gui.dock.themes.ThemeProperties;
 import bibliothek.gui.dock.themes.ThemePropertyFactory;
 import bibliothek.gui.dock.themes.basic.BasicCombiner;
 import bibliothek.gui.dock.themes.basic.BasicDisplayerFactory;
 import bibliothek.gui.dock.themes.basic.BasicStationPaint;
-import bibliothek.gui.dock.util.DockUtilities;
 import bibliothek.gui.dock.util.IconManager;
-import bibliothek.gui.dock.util.Priority;
+import bibliothek.gui.dock.util.TextManager;
+import bibliothek.gui.dock.util.UIValue;
 import bibliothek.gui.dock.util.laf.DefaultLookAndFeelColors;
 import bibliothek.gui.dock.util.laf.LookAndFeelColors;
 import bibliothek.gui.dock.util.laf.LookAndFeelColorsListener;
@@ -77,6 +79,7 @@ import bibliothek.gui.dock.util.laf.Windows;
 import bibliothek.gui.dock.util.local.LocaleListener;
 import bibliothek.util.Todo;
 import bibliothek.util.Todo.Compatibility;
+import bibliothek.util.Todo.Priority;
 import bibliothek.util.Todo.Version;
 import bibliothek.util.container.Tuple;
 
@@ -101,9 +104,6 @@ public class DockUI {
 	/** the local used to load the {@link ResourceBundle} */
 	private Locale locale = Locale.getDefault();
 	
-    /** The icons used in this framework */
-    private Map<String, Icon> icons;
-    
     /** A list of all available themes */
     private List<ThemeFactory> themes = new ArrayList<ThemeFactory>();
     
@@ -151,30 +151,6 @@ public class DockUI {
      * Creates a new DockUI
      */
     protected DockUI(){
-        icons = DockUtilities.loadIcons( "data/icons.ini", null, DockUI.class.getClassLoader() );
-        
-        // special icons
-        icons.put( OVERFLOW_MENU_ICON, new Icon(){
-			public int getIconHeight(){
-				return 7;
-			}
-
-			public int getIconWidth(){
-				return 9;
-			}
-
-			public void paintIcon( Component c, Graphics g, int x, int y ){
-				g = g.create();
-				((Graphics2D)g).setRenderingHint( RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON );
-				g.setColor( c.getForeground() );
-				
-				g.fillPolygon( 
-						new int[]{ x + 1, x + 8, x + 4 },
-						new int[]{ y + 1, y + 1, y + 6 }, 3 );
-				g.dispose();
-			}
-        });
-        
         setLocale( Locale.getDefault() );
         
         registerThemes();
@@ -198,15 +174,15 @@ public class DockUI {
     }
     
     private void registerThemes(){
-        registerTheme( BasicTheme.class, null );
-        registerTheme( FlatTheme.class, null );
-        registerTheme( SmoothTheme.class, null );
-        registerTheme( BubbleTheme.class, null );
-        registerTheme( EclipseTheme.class, null );
-        registerTheme( NoStackTheme.getFactory( BasicTheme.class, null, this ));
-        registerTheme( NoStackTheme.getFactory( FlatTheme.class, null, this ));
-        registerTheme( NoStackTheme.getFactory( SmoothTheme.class, null, this ));
-        registerTheme( NoStackTheme.getFactory( BubbleTheme.class, null, this ));
+        registerTheme( BasicTheme.class );
+        registerTheme( FlatTheme.class );
+        registerTheme( SmoothTheme.class );
+        registerTheme( BubbleTheme.class );
+        registerTheme( EclipseTheme.class );
+        registerTheme( NoStackTheme.getFactory( BasicTheme.class ));
+        registerTheme( NoStackTheme.getFactory( FlatTheme.class ));
+        registerTheme( NoStackTheme.getFactory( SmoothTheme.class ));
+        registerTheme( NoStackTheme.getFactory( BubbleTheme.class ));
     }
     
     private void registerColors(){
@@ -237,12 +213,9 @@ public class DockUI {
      * @param <T> the type of the {@link DockTheme}.
      * @param theme A class which must have the annotation 
      * {@link ThemeProperties}
-     * @param bundle The {@link ResourceBundle} that should be used to read
-     * name and description. This argument can be <code>null</code>, in that
-     * case the bundle of this DockUI will be used.
      */
-    public <T extends DockTheme> void registerTheme( Class<T> theme, ResourceBundle bundle ){
-        registerTheme( new ThemePropertyFactory<T>( theme, bundle, this ));
+    public <T extends DockTheme> void registerTheme( Class<T> theme ){
+        registerTheme( new ThemePropertyFactory<T>( theme ));
     }
     
     /**
@@ -365,7 +338,11 @@ public class DockUI {
     /**
      * Gets the local resource bundle.
      * @return the bundle
+     * @deprecated replaced by the {@link TextManager}
      */
+    @Deprecated
+    @Todo(compatibility=Compatibility.BREAK_MINOR, priority=Priority.MAJOR, target=Version.VERSION_1_1_0,
+    		description="remove this method")
     public ResourceBundle getBundle(){
 		return bundle;
 	}
@@ -374,7 +351,11 @@ public class DockUI {
      * Gets a string of the current {@link #getBundle() bundle}.
      * @param key the key of the string
      * @return the string
+     * @deprecated replaced by the {@link TextManager}
      */
+    @Deprecated
+    @Todo(compatibility=Compatibility.BREAK_MINOR, priority=Priority.MAJOR, target=Version.VERSION_1_1_0,
+    		description="remove this method")
     public String getString( String key ){
     	return getBundle().getString( key );
     }
@@ -383,7 +364,11 @@ public class DockUI {
      * Sets the locale for which a {@link #getBundle() ResourceBundle}
      * should be loaded.
      * @param locale the new locale, not <code>null</code>
+     * @deprecated replaced by the {@link TextManager}
      */
+    @Deprecated
+    @Todo(compatibility=Compatibility.BREAK_MINOR, priority=Priority.MAJOR, target=Version.VERSION_1_1_0,
+    		description="remove this method")
     public void setLocale( Locale locale ){
     	if( locale == null )
     		throw new IllegalArgumentException( "locale must not be null" );
@@ -394,7 +379,11 @@ public class DockUI {
      * Gets the {@link Locale} for which {@link #getBundle() the ResourceBundle}
      * was loaded.
      * @return the locale, not <code>null</code>
+     * @deprecated replaced by the {@link TextManager}
      */
+    @Deprecated
+    @Todo(compatibility=Compatibility.BREAK_MINOR, priority=Priority.MAJOR, target=Version.VERSION_1_1_0,
+    		description="remove this method")
     public Locale getLocale(){
 		return locale;
 	}
@@ -402,7 +391,11 @@ public class DockUI {
     /**
      * Adds a new {@link LocaleListener}.
      * @param listener the new listener, not <code>null</code>
+     * @deprecated replaced by the {@link TextManager}
      */
+    @Deprecated
+    @Todo(compatibility=Compatibility.BREAK_MINOR, priority=Priority.MAJOR, target=Version.VERSION_1_1_0,
+    		description="remove this method")
     public void addLocaleListener( LocaleListener listener ){
     	localeListeners.add( listener );
     }
@@ -410,11 +403,18 @@ public class DockUI {
     /**
      * Removes <code>listener</code> from this {@link DockUI}.
      * @param listener the listener to remove
+     * @deprecated replaced by the {@link TextManager}
      */
+    @Deprecated
+    @Todo(compatibility=Compatibility.BREAK_MINOR, priority=Priority.MAJOR, target=Version.VERSION_1_1_0,
+    		description="remove this method")
     public void removeLocaleListener( LocaleListener listener ){
     	localeListeners.remove( listener );
     }
     
+    @Deprecated
+    @Todo(compatibility=Compatibility.BREAK_MINOR, priority=Priority.MAJOR, target=Version.VERSION_1_1_0,
+    		description="remove this method")
     private LocaleListener[] localeListeners(){
     	return localeListeners.toArray( new LocaleListener[ localeListeners.size() ] );
     }
@@ -422,7 +422,11 @@ public class DockUI {
     /**
      * Sets the resource bundle which should be used.
      * @param bundle the bundle
+     * @deprecated replaced by the {@link TextManager}
      */
+    @Deprecated
+    @Todo(compatibility=Compatibility.BREAK_MINOR, priority=Priority.MAJOR, target=Version.VERSION_1_1_0,
+    		description="remove this method")
     public void setBundle( ResourceBundle bundle ){
 		this.bundle = bundle;
 		
@@ -445,39 +449,16 @@ public class DockUI {
     }
     
     /**
-     * Gets the icon stored under <code>key</code>. The keys are stored in
-     * a file "icons.ini" in the directory "data".
-     * @param key the key for the icon
-     * @return the icon or <code>null</code>
-     */
-    public Icon getIcon( String key ){
-        return icons.get( key );
-    }
-    
-    /**
-     * Sets the icon that is used for a certain key.
-     * @param key the key 
-     * @param icon the icon to return if {@link #getIcon(String)} is invoked
-     */
-    public void setIcon( String key, Icon icon ){
-        icons.put( key, icon );
-    }
-    
-    /**
-     * Fills all known icons as default-icons into the given manager.
-     * @param manager the manager to fill
-     */
-    public void fillIcons( IconManager manager ){
-        for( Map.Entry<String, Icon> icon : icons.entrySet() )
-            manager.setIcon( icon.getKey(), Priority.DEFAULT, icon.getValue() );
-    }
-    
-    /**
      * Gets a {@link StationPaint} for <code>station</code>.
      * @param paint a default value, may be <code>null</code>
      * @param station the station for which a paint is searched
      * @return <code>paint</code> or another StationPaint, not <code>null</code>
+     * @deprecated since the {@link ThemeManager} exists, this method should no longer be used. Instead an
+     * {@link UIValue} should be registered at the {@link ThemeManager}, see {@link DefaultStationPaintValue}.
      */
+    @Deprecated
+    @Todo( compatibility=Compatibility.BREAK_MINOR, priority=Todo.Priority.ENHANCEMENT, target=Version.VERSION_1_1_1,
+    		description="remove this methode")
     public static StationPaint getPaint( StationPaint paint, DockStation station ){
         if( paint != null )
             return paint;
@@ -494,7 +475,11 @@ public class DockUI {
      * @param factory a default value, may be <code>null</code>
      * @param station the station for which a factory is searched
      * @return <code>factory</code> or another DisplayerFactory, not <code>null</code>
+     * @deprecated this method is no longer used, clients should use the {@link ThemeManager} to retrieve such resources
      */
+    @Deprecated
+    @Todo( compatibility=Compatibility.BREAK_MINOR, priority=Todo.Priority.ENHANCEMENT, target=Version.VERSION_1_1_1,
+    		description="remove this methode")
     public static DisplayerFactory getDisplayerFactory( DisplayerFactory factory, DockStation station ){
     	if( factory != null )
     		return factory;
@@ -511,7 +496,11 @@ public class DockUI {
      * @param combiner a default value, may be <code>null</code>
      * @param station the station for which a combiner is searched
      * @return <code>combiner</code> or another Combiner, not <code>null</code>
+     * @deprecated this method is no longer used, clients should use the {@link ThemeManager} to retrieve such resources
      */
+    @Deprecated
+    @Todo( compatibility=Compatibility.BREAK_MINOR, priority=Todo.Priority.ENHANCEMENT, target=Version.VERSION_1_1_1,
+    		description="remove this methode")
     public static Combiner getCombiner( Combiner combiner, DockStation station ){
         if( combiner != null )
             return combiner;
@@ -534,7 +523,7 @@ public class DockUI {
      * @param factory a factory used to remove and to add the elements
      * @throws IOException if the factory throws an exception
      */
-    public static <D extends DockStation, L> void updateTheme( D station, DockFactory<D,L> factory ) throws IOException{
+    public static <D extends DockStation, L> void updateTheme( D station, DockFactory<D,?,L> factory ) throws IOException{
         Map<Integer, Dockable> children = new HashMap<Integer, Dockable>();
     	Map<Dockable, Integer> ids = new HashMap<Dockable, Integer>();
     	
@@ -627,6 +616,34 @@ public class DockUI {
     		parent = parent.getParent();
     	}
     	return false;
+    }
+    
+    /**
+     * Tells whether this application runs in a restricted environment or not. This method
+     * only makes a guess and may return a false result.
+     * @return whether this is a restricted environment
+     */
+    public static boolean isSecureEnvironment(){
+        try{
+        	Toolkit toolkit = Toolkit.getDefaultToolkit();
+        	AWTEventListener listener = new AWTEventListener(){
+				public void eventDispatched( AWTEvent event ){
+					// ignore	
+				}
+			}; 
+        	toolkit.addAWTEventListener( listener, AWTEvent.KEY_EVENT_MASK | AWTEvent.MOUSE_EVENT_MASK | AWTEvent.MOUSE_MOTION_EVENT_MASK | AWTEvent.MOUSE_WHEEL_EVENT_MASK );
+        	toolkit.removeAWTEventListener( listener );
+			
+//            SecurityManager security = System.getSecurityManager();
+//            if( security != null ){
+//                security.checkPermission(SecurityConstants.ALL_AWT_EVENTS_PERMISSION);
+//            }
+        }
+        catch( SecurityException ex ){
+            return true;
+        }
+        
+        return false;
     }
     
     private static Component firstOnPath( Container parent, Component child ){

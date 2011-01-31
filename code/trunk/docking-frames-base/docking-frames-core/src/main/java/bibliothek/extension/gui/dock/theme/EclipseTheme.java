@@ -25,12 +25,10 @@
  */
 package bibliothek.extension.gui.dock.theme;
 
-import java.util.Map;
-
-import javax.swing.Icon;
 import javax.swing.JComponent;
 
 import bibliothek.extension.gui.dock.theme.eclipse.DefaultEclipseThemeConnector;
+import bibliothek.extension.gui.dock.theme.eclipse.EclipseButtonTitle;
 import bibliothek.extension.gui.dock.theme.eclipse.EclipseColorScheme;
 import bibliothek.extension.gui.dock.theme.eclipse.EclipseDockTitleFactory;
 import bibliothek.extension.gui.dock.theme.eclipse.EclipseDockableSelection;
@@ -45,7 +43,6 @@ import bibliothek.extension.gui.dock.theme.eclipse.stack.tab.BasicTabDockTitle;
 import bibliothek.extension.gui.dock.theme.eclipse.stack.tab.DockTitleTab;
 import bibliothek.extension.gui.dock.theme.eclipse.stack.tab.RectGradientPainter;
 import bibliothek.extension.gui.dock.theme.eclipse.stack.tab.TabPainter;
-import bibliothek.extension.gui.dock.theme.flat.FlatButtonTitle;
 import bibliothek.gui.DockController;
 import bibliothek.gui.Dockable;
 import bibliothek.gui.dock.FlapDockStation;
@@ -87,9 +84,9 @@ import bibliothek.gui.dock.title.DockTitleManager;
 import bibliothek.gui.dock.title.DockTitleRequest;
 import bibliothek.gui.dock.title.DockTitleVersion;
 import bibliothek.gui.dock.util.DockProperties;
-import bibliothek.gui.dock.util.DockUtilities;
 import bibliothek.gui.dock.util.Priority;
 import bibliothek.gui.dock.util.PropertyKey;
+import bibliothek.gui.dock.util.icon.DefaultIconScheme;
 import bibliothek.gui.dock.util.property.ConstantPropertyFactory;
 import bibliothek.gui.dock.util.property.DynamicPropertyFactory;
 
@@ -190,9 +187,7 @@ import bibliothek.gui.dock.util.property.DynamicPropertyFactory;
 
         super.install( controller );
 
-        Map<String, Icon> icons = DockUtilities.loadIcons( "data/eclipse/icons.ini", null, EclipseTheme.class.getClassLoader() );
-        for( Map.Entry<String, Icon> entry : icons.entrySet() )
-            controller.getIcons().setIconTheme( entry.getKey(), entry.getValue() );
+        controller.getIcons().setScheme( Priority.THEME, new DefaultIconScheme( "data/eclipse/icons.ini", EclipseTheme.class.getClassLoader(), controller ) );
 
         EclipseDockTitleFactory factory = new EclipseDockTitleFactory( this, new ControllerTitleFactory() );
 
@@ -215,7 +210,8 @@ import bibliothek.gui.dock.util.property.DynamicPropertyFactory;
         	}
         	
         	public void request( DockTitleRequest request ){
-	        	request.answer( new FlatButtonTitle( request.getTarget(), request.getVersion() ) );	
+//	        	request.answer( new FlatButtonTitle( request.getTarget(), request.getVersion() ) );
+        		request.answer( new EclipseButtonTitle( request.getTarget(), request.getVersion() ) );
         	}
         });
 
@@ -223,7 +219,7 @@ import bibliothek.gui.dock.util.property.DynamicPropertyFactory;
                 new ViewGenerator<ButtonDockAction, BasicTitleViewItem<JComponent>>(){
             public BasicTitleViewItem<JComponent> create( ActionViewConverter converter, ButtonDockAction action, Dockable dockable ){
                 BasicButtonHandler handler = new BasicButtonHandler( action, dockable );
-                RoundRectButton button = new RoundRectButton( handler );
+                RoundRectButton button = new RoundRectButton( handler, handler );
                 handler.setModel( button.getModel() );
                 return handler;
             }
@@ -233,7 +229,7 @@ import bibliothek.gui.dock.util.property.DynamicPropertyFactory;
                 new ViewGenerator<SelectableDockAction, BasicTitleViewItem<JComponent>>(){
             public BasicTitleViewItem<JComponent> create( ActionViewConverter converter, SelectableDockAction action, Dockable dockable ){
                 BasicSelectableHandler.Check handler = new BasicSelectableHandler.Check( action, dockable );
-                RoundRectButton button = new RoundRectButton( handler );
+                RoundRectButton button = new RoundRectButton( handler, handler );
                 handler.setModel( button.getModel() );
                 return handler;
             }
@@ -243,7 +239,7 @@ import bibliothek.gui.dock.util.property.DynamicPropertyFactory;
                 new ViewGenerator<MenuDockAction, BasicTitleViewItem<JComponent>>(){
             public BasicTitleViewItem<JComponent> create( ActionViewConverter converter, MenuDockAction action, Dockable dockable ){
                 BasicMenuHandler handler = new BasicMenuHandler( action, dockable );
-                RoundRectButton button = new RoundRectButton( handler );
+                RoundRectButton button = new RoundRectButton( handler, handler );
                 handler.setModel( button.getModel() );
                 return handler;
             }
@@ -253,7 +249,7 @@ import bibliothek.gui.dock.util.property.DynamicPropertyFactory;
                 new ViewGenerator<SelectableDockAction, BasicTitleViewItem<JComponent>>(){
             public BasicTitleViewItem<JComponent> create( ActionViewConverter converter, SelectableDockAction action, Dockable dockable ){
                 BasicSelectableHandler.Radio handler = new BasicSelectableHandler.Radio( action, dockable );
-                RoundRectButton button = new RoundRectButton( handler );
+                RoundRectButton button = new RoundRectButton( handler, handler );
                 handler.setModel( button.getModel() );
                 return handler;
             }
@@ -270,49 +266,49 @@ import bibliothek.gui.dock.util.property.DynamicPropertyFactory;
         });
     }
 
-    @Override
-    protected void updateColors() {
-        DockController controller = getController();
-        if( controller != null && getColorScheme() != null ){
-            controller.getColors().lockUpdate();
-
-            super.updateColors();
-
-            updateColor( "stack.tab.border", null );
-            updateColor( "stack.tab.border.selected", null );
-            updateColor( "stack.tab.border.selected.focused", null );
-            updateColor( "stack.tab.border.selected.focuslost", null );
-
-            updateColor( "stack.tab.top", null );
-            updateColor( "stack.tab.top.selected", null );
-            updateColor( "stack.tab.top.selected.focused", null );
-            updateColor( "stack.tab.top.selected.focuslost", null );
-
-            updateColor( "stack.tab.bottom", null );
-            updateColor( "stack.tab.bottom.selected", null );
-            updateColor( "stack.tab.bottom.selected.focused", null );
-            updateColor( "stack.tab.bottom.selected.focuslost", null );
-
-            updateColor( "stack.tab.text", null );
-            updateColor( "stack.tab.text.selected", null );
-            updateColor( "stack.tab.text.selected.focused", null );
-            updateColor( "stack.tab.text.selected.focuslost", null );
-
-            updateColor( "stack.border", null );
-
-            updateColor( "selection.border", null );
-
-            controller.getColors().unlockUpdate();
-        }
-        else{
-            super.updateColors();
-        }
-    }
+//    @Override
+//    protected void updateColors() {
+//        DockController controller = getController();
+//        if( controller != null && getColorScheme() != null ){
+//            controller.getColors().lockUpdate();
+//
+//            super.updateColors();
+//
+//            updateColor( "stack.tab.border", null );
+//            updateColor( "stack.tab.border.selected", null );
+//            updateColor( "stack.tab.border.selected.focused", null );
+//            updateColor( "stack.tab.border.selected.focuslost", null );
+//
+//            updateColor( "stack.tab.top", null );
+//            updateColor( "stack.tab.top.selected", null );
+//            updateColor( "stack.tab.top.selected.focused", null );
+//            updateColor( "stack.tab.top.selected.focuslost", null );
+//
+//            updateColor( "stack.tab.bottom", null );
+//            updateColor( "stack.tab.bottom.selected", null );
+//            updateColor( "stack.tab.bottom.selected.focused", null );
+//            updateColor( "stack.tab.bottom.selected.focuslost", null );
+//
+//            updateColor( "stack.tab.text", null );
+//            updateColor( "stack.tab.text.selected", null );
+//            updateColor( "stack.tab.text.selected.focused", null );
+//            updateColor( "stack.tab.text.selected.focuslost", null );
+//
+//            updateColor( "stack.border", null );
+//
+//            updateColor( "selection.border", null );
+//
+//            controller.getColors().unlockUpdate();
+//        }
+//        else{
+//            super.updateColors();
+//        }
+//    }
 
     @Override
     public void uninstall( DockController controller ){
         super.uninstall( controller );
-        controller.getIcons().clearThemeIcons();
+        controller.getIcons().setScheme( Priority.THEME, null );
         controller.getDockTitleManager().clearThemeFactories();
         controller.removeAcceptance( acceptance );
         controller.getProperties().unset( TabPane.LAYOUT_MANAGER, Priority.THEME );

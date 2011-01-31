@@ -31,15 +31,31 @@ import java.awt.Toolkit;
 import java.awt.event.AWTEventListener;
 
 import bibliothek.gui.DockController;
+import bibliothek.gui.dock.control.focus.AbstractMouseFocusObserver;
+import bibliothek.gui.dock.event.ControllerSetupListener;
+import bibliothek.gui.dock.util.PropertyValue;
+import bibliothek.util.Todo;
+import bibliothek.util.Todo.Compatibility;
+import bibliothek.util.Todo.Priority;
+import bibliothek.util.Todo.Version;
 
 /**
  * A focus controller which adds an {@link AWTEventListener} to the 
  * {@link Toolkit} to receive events which may change the focus. 
  * @author Benjamin Sigg
  */
-public class DefaultMouseFocusObserver extends MouseFocusObserver{
+@Todo( compatibility=Compatibility.COMPATIBLE, priority=Priority.MAJOR, target=Version.VERSION_1_1_0,
+		description="Some kind of strategy to decide which child Component of a Dockable should be focused")
+public class DefaultMouseFocusObserver extends AbstractMouseFocusObserver{
     /** The listener to all AWT events*/
     private AWTEventListener listener;
+    
+    /** whether the application is in restricted mode or not */
+    private PropertyValue<Boolean> restricted = new PropertyValue<Boolean>( DockController.RESTRICTED_ENVIRONMENT ){
+		protected void valueChanged( Boolean oldValue, Boolean newValue ){
+			updateRestricted();
+		}
+	};
     
     /**
      * Creates a new focus controller
@@ -50,22 +66,48 @@ public class DefaultMouseFocusObserver extends MouseFocusObserver{
     public DefaultMouseFocusObserver( DockController controller, ControllerSetupCollection setup ){
         super( controller, setup );
         
-        listener = createListener();
-        
-        try{
-            Toolkit.getDefaultToolkit().addAWTEventListener( listener,
-                    AWTEvent.MOUSE_EVENT_MASK | 
-                    AWTEvent.MOUSE_WHEEL_EVENT_MASK );
-        }
-        catch( SecurityException ex ){
-            throw new SecurityException( "Can't setup the focus controller properly, please have a look at SecureDockController", ex );
-        }
+        setup.add( new ControllerSetupListener(){
+			public void done( DockController controller ){
+				restricted.setProperties( controller );
+				updateRestricted();
+			}
+		});
+    }
+    
+    private void updateRestricted(){
+    	if( restricted.getProperties() != null ){
+	    	if( !restricted.getValue() ){
+	    		if( listener == null ){
+	    			listener = createListener();
+	    	
+	    			try{
+	    	            Toolkit.getDefaultToolkit().addAWTEventListener( listener,
+	    	                    AWTEvent.MOUSE_EVENT_MASK | 
+	    	                    AWTEvent.MOUSE_WHEEL_EVENT_MASK );
+	    	        }
+	    	        catch( SecurityException ex ){
+	    	        	System.err.println( "Can't register AWTEventListener, support for global MouseEvents disabled" );
+	    	        	ex.printStackTrace();
+	    	        }
+	    		}
+	    	}
+	    	else{
+	    		if( listener != null ){
+	    			Toolkit.getDefaultToolkit().removeAWTEventListener( listener );
+	    			listener = null;
+	    		}
+	    	}
+    	}
     }
     
     @Override
     public void kill(){
         super.kill();
-        Toolkit.getDefaultToolkit().removeAWTEventListener( listener );
+        if( listener != null ){
+        	Toolkit.getDefaultToolkit().removeAWTEventListener( listener );
+        	listener = null;
+        }
+        restricted.setProperties( (DockController)null );
     }
     
     /**

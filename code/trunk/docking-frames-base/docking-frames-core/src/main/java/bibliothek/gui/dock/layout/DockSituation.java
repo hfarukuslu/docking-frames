@@ -57,7 +57,10 @@ import bibliothek.gui.dock.station.stack.StackDockStationFactory;
 import bibliothek.gui.dock.station.support.PlaceholderStrategy;
 import bibliothek.gui.dock.util.DockUtilities;
 import bibliothek.util.Path;
+import bibliothek.util.Todo;
 import bibliothek.util.Version;
+import bibliothek.util.Todo.Compatibility;
+import bibliothek.util.Todo.Priority;
 import bibliothek.util.xml.XAttribute;
 import bibliothek.util.xml.XElement;
 import bibliothek.util.xml.XException;
@@ -70,7 +73,7 @@ import bibliothek.util.xml.XException;
  */
 public class DockSituation {
     /** the factories used to create new {@link DockElement elements}*/
-    private Map<String, DockFactory<?,?>> factories = new HashMap<String, DockFactory<?,?>>();
+    private Map<String, DockFactory<?,?,?>> factories = new HashMap<String, DockFactory<?,?,?>>();
 
     /** the factory used when no {@link DockFactory} is available */
     private MissingDockFactory missingFactory;
@@ -92,8 +95,8 @@ public class DockSituation {
      * used to create new {@link DockElement DockElements}
      * @param factories the factories
      */
-    public DockSituation( DockFactory<?,?>...factories ){
-        for( DockFactory<?,?> factory : factories )
+    public DockSituation( DockFactory<?,?,?>...factories ){
+        for( DockFactory<?,?,?> factory : factories )
             this.factories.put( getID( factory ), factory );
     }
 
@@ -113,15 +116,23 @@ public class DockSituation {
                 new SecureFlapDockStationFactory());
     }
 
+    /**
+     * Creates a new {@link Perspective} that uses the settings made on this {@link DockSituation}. Changes on the
+     * properties of this {@link DockSituation} will be noticed and used by the created {@link Perspective}. However
+     * changes on the properties of the {@link Perspective} will not influence this {@link DockSituation}.<br>
+     * Note that subclasses may create {@link Perspective}s that need the client to make additional settings before
+     * it can be used. 
+     * @return the new perspective
+     */
     public Perspective createPerspective(){
-    	return new Perspective(){
+    	return new Perspective( this ){
 			@Override
-			protected String getID( PerspectiveElement<?> element ){
+			protected String getID( PerspectiveElement element ){
 				return DockSituation.this.getID( element );
 			}
 			
 			@Override
-			protected DockFactory<?, ?> getFactory( String id ){
+			protected DockFactory<?,?,?> getFactory( String id ){
 				return DockSituation.this.getFactory( id );
 			}
 		};
@@ -180,10 +191,10 @@ public class DockSituation {
      * Adds a factory
      * @param factory the additional factory
      */
-    public void add( DockFactory<?,?> factory ){
+    public void add( DockFactory<?,?,?> factory ){
         factories.put( getID( factory ), factory );
     }
-
+    
     /**
      * Adds an adjacent factory
      * @param factory the new factory
@@ -254,7 +265,7 @@ public class DockSituation {
             return null;
 
         String id = getID( element );
-        DockFactory<DockElement,Object> factory = (DockFactory<DockElement, Object>)getFactory( id );
+        DockFactory<DockElement,?,Object> factory = (DockFactory<DockElement,?,Object>)getFactory( id );
         if( factory == null )
             throw new IllegalArgumentException( "Unknown factory-id: " + element.getFactoryID() );
 
@@ -306,6 +317,8 @@ public class DockSituation {
      * if the factory for <code>composition</code> was not found
      */
     @SuppressWarnings("unchecked")
+    @Todo(compatibility=Compatibility.COMPATIBLE, priority=Priority.MAJOR, target=Todo.Version.VERSION_1_1_0,
+    		description="setting Dockable.parent to null should also be done in the stations whose layout changes")
     public DockElement convert( DockLayoutComposition composition ){
         DockLayoutInfo info = composition.getLayout();
         if( info == null )
@@ -315,7 +328,7 @@ public class DockSituation {
         if( layout == null )
             return null;
 
-        DockFactory<DockElement, Object> factory = (DockFactory<DockElement, Object>)getFactory( layout.getFactoryID() );
+        DockFactory<DockElement,?,Object> factory = (DockFactory<DockElement,?,Object>)getFactory( layout.getFactoryID() );
         if( factory == null )
             return null;
 
@@ -339,6 +352,9 @@ public class DockSituation {
                     Dockable dockable = child.asDockable();
                     if( dockable != null ){
                         children.put( index, dockable );
+                        if( dockable.getDockParent() != null ){
+                        	dockable.getDockParent().drag( dockable );
+                        }
                     }
                 }
 
@@ -408,7 +424,7 @@ public class DockSituation {
         }
         else if( info.getKind() == DockLayoutInfo.Data.DOCK_LAYOUT ){
             DockLayout<?> layout = info.getDataLayout();
-            DockFactory<DockElement, Object> factory = (DockFactory<DockElement, Object>)getFactory( layout.getFactoryID() );
+            DockFactory<DockElement,?,Object> factory = (DockFactory<DockElement,?,Object>)getFactory( layout.getFactoryID() );
             if( factory == null )
                 throw new IOException( "Missing factory: " + layout.getFactoryID() );
             
@@ -570,7 +586,7 @@ public class DockSituation {
         
         String factoryId = entryIn.readUTF();
         
-        DockFactory<DockElement, Object> factory = (DockFactory<DockElement, Object>)getFactory( factoryId );
+        DockFactory<DockElement,?,Object> factory = (DockFactory<DockElement,?,Object>)getFactory( factoryId );
 
         // contents
         DockLayoutInfo info;
@@ -792,7 +808,7 @@ public class DockSituation {
         else if( info.getKind() == DockLayoutInfo.Data.DOCK_LAYOUT ){
             DockLayout<?> layout = info.getDataLayout();
 
-            DockFactory<DockElement, Object> factory = (DockFactory<DockElement, Object>)getFactory( layout.getFactoryID() );
+            DockFactory<DockElement,?,Object> factory = (DockFactory<DockElement,?,Object>)getFactory( layout.getFactoryID() );
             if( factory == null )
                 throw new IllegalArgumentException( "Missing factory: " + layout.getFactoryID() );
 
@@ -897,7 +913,7 @@ public class DockSituation {
             if( xplaceholder != null ){
             	placeholder = new Path( xplaceholder.getString() );
             }
-            DockFactory<DockElement, Object> factory = (DockFactory<DockElement, Object>)getFactory( factoryId );
+            DockFactory<DockElement,?,Object> factory = (DockFactory<DockElement,?,Object>)getFactory( factoryId );
             if( factory != null ){
                 Object data = factory.read( element, placeholders );
                 if( data != null ){
@@ -997,7 +1013,7 @@ public class DockSituation {
      * method tries to fill gaps in <code>composition</code>. It checks
      * all the {@link DockLayoutInfo}s, if an info contains a byte array or
      * an {@link XElement}, then this method tries to use a factory to
-     * read the element. It a {@link #setMissingFactory(MissingDockFactory) missing factory}
+     * read the element. If a {@link #setMissingFactory(MissingDockFactory) missing factory}
      * is present, then this factory is used as well.
      * @param composition the composition to read
      * @return either <code>composition</code> or a new composition if this
@@ -1142,7 +1158,7 @@ public class DockSituation {
     		return;
     	}
 
-    	DockFactory<DockElement, Object> factory = (DockFactory<DockElement, Object>)getFactory( layout.getFactoryID() );
+    	DockFactory<DockElement,?,Object> factory = (DockFactory<DockElement,?,Object>)getFactory( layout.getFactoryID() );
     	if( factory == null ){
     		return;
     	}
@@ -1192,7 +1208,7 @@ public class DockSituation {
      * @see #getID(DockFactory)
      * @see #getFactory(String)
      */
-    protected String getID( PerspectiveElement<?> element ){
+    protected String getID( PerspectiveElement element ){
     	return element.getFactoryID();
     }
     
@@ -1215,7 +1231,7 @@ public class DockSituation {
      * @param factory the factory whose id is needed
      * @return the id of the factory
      */
-    protected String getID( DockFactory<?,?> factory ){
+    protected String getID( DockFactory<?,?,?> factory ){
         return factory.getID();
     }
 
@@ -1261,7 +1277,7 @@ public class DockSituation {
      * @return the identifier
      * @see #getID(DockFactory)
      */
-    public String convertFactoryId( DockFactory<?, ?> factory ){
+    public String convertFactoryId( DockFactory<?,?,?> factory ){
         return getID( factory );
     }
     
@@ -1322,7 +1338,7 @@ public class DockSituation {
      * @param id the name of the factory
      * @return the factory or <code>null</code> if no factory has this id
      */
-    protected DockFactory<? extends DockElement,?> getFactory( String id ){
+    public DockFactory<? extends DockElement,?,?> getFactory( String id ){
         return factories.get( id );
     }
 
@@ -1334,7 +1350,7 @@ public class DockSituation {
      * @param id the name of the factory
      * @return the factory or <code>null</code> if no factory has this id
      */
-    protected AdjacentDockFactory<?> getAdjacentFactory( String id ){
+    public AdjacentDockFactory<?> getAdjacentFactory( String id ){
         return adjacent.get( id );
     }
 }

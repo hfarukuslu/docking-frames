@@ -33,12 +33,13 @@ import java.util.List;
 import bibliothek.gui.DockController;
 import bibliothek.gui.DockStation;
 import bibliothek.gui.Dockable;
+import bibliothek.gui.dock.themes.DefaultDisplayerFactoryValue;
 import bibliothek.gui.dock.title.DockTitle;
 
 /**
  * A set of {@link DockableDisplayer}s. Clients may
  * {@link #fetch(Dockable, DockTitle) fetch} a new displayer at any time. They
- * shoult {@link #release(DockableDisplayer) release} a displayer which
+ * should {@link #release(DockableDisplayer) release} a displayer which
  * is no longer used. The collection ensures that various properties of the
  * displayers are set in the proper order.
  * @author Benjamin Sigg
@@ -74,6 +75,19 @@ public class DisplayerCollection implements Iterable<DockableDisplayer>{
         
         this.station = station;
         this.factory = factory;
+    }
+    
+    /**
+     * Creates a new collection
+     * @param station the station for which {@link DockableDisplayer}s will be created
+     * @param factory the factory that is used create displayers
+     */
+    public DisplayerCollection( DockStation station, final DefaultDisplayerFactoryValue factory ){
+    	this( station, new DisplayerFactory(){
+			public DockableDisplayer create( DockStation station, Dockable dockable, DockTitle title ){
+				return factory.create( dockable, title );
+			}
+		});
     }
     
     /**

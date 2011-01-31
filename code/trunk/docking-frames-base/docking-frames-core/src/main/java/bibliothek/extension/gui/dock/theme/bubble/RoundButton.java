@@ -25,7 +25,13 @@
  */
 package bibliothek.extension.gui.dock.theme.bubble;
 
-import java.awt.*;
+import java.awt.BasicStroke;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
+import java.awt.Stroke;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 
@@ -37,8 +43,12 @@ import bibliothek.gui.Dockable;
 import bibliothek.gui.dock.action.DockAction;
 import bibliothek.gui.dock.themes.basic.action.BasicButtonModel;
 import bibliothek.gui.dock.themes.basic.action.BasicButtonModelAdapter;
+import bibliothek.gui.dock.themes.basic.action.BasicResourceInitializer;
 import bibliothek.gui.dock.themes.basic.action.BasicTrigger;
 import bibliothek.gui.dock.themes.color.ActionColor;
+import bibliothek.gui.dock.util.AbstractPaintableComponent;
+import bibliothek.gui.dock.util.BackgroundComponent;
+import bibliothek.gui.dock.util.BackgroundPaint;
 import bibliothek.gui.dock.util.color.ColorCodes;
 
 /**
@@ -76,10 +86,12 @@ public class RoundButton extends JComponent implements RoundButtonConnectable{
      * Creates a new round button.
      * @param trigger a trigger which gets informed when the user clicks the
      * button.
+     * @param initializer a strategy to lazily initialize resources, can be <code>null</code>
+     * 
      * @param dockable the dockable for which this button is used
      * @param action the action for which this button is used
      */
-	public RoundButton( BasicTrigger trigger, Dockable dockable, DockAction action ){
+	public RoundButton( BasicTrigger trigger, BasicResourceInitializer initializer, Dockable dockable, DockAction action ){
 		setFocusable( true );
 		
 		animation = new BubbleColorAnimation();
@@ -104,7 +116,7 @@ public class RoundButton extends JComponent implements RoundButtonConnectable{
 		        new RoundActionColor( "action.button.pressed.selected.enabled.focus", dockable, action, Color.DARK_GRAY ),
 		};
 		
-        model = new BasicButtonModel( this, trigger ){
+        model = new BasicButtonModel( this, trigger, initializer ){
             @Override
             public void changed() {
                 updateColors();
@@ -199,8 +211,57 @@ public class RoundButton extends JComponent implements RoundButtonConnectable{
 		Graphics2D g2 = (Graphics2D)g.create();
 		g2.setRenderingHint( RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON );
 
+		BackgroundPaint paint = model.getBackground();
+		BackgroundComponent component = model.getBackgroundComponent();
+		if( paint == null ){
+			doPaintBackground( g2 );
+			doPaintForeground( g2 );
+		}
+		else{
+			AbstractPaintableComponent paintable = new AbstractPaintableComponent( component, this, paint ){
+				protected void foreground( Graphics g ){
+					doPaintForeground( g );
+				}
+				
+				protected void background( Graphics g ){
+					doPaintBackground( g );
+				}
+
+				protected void border( Graphics g ){
+					// ignore					
+				}
+
+				protected void children( Graphics g ){
+					// ignore	
+				}
+				
+				protected void overlay( Graphics g ){
+					// ignore
+				}
+				
+				
+				public boolean isSolid(){
+					return false;
+				}
+				
+				public boolean isTransparent(){
+					return false;
+				}
+			};
+			paintable.paint( g2 );
+		}
+		
+		g2.dispose();
+	}
+	
+	private void doPaintBackground( Graphics g ){
+		Graphics2D g2 = (Graphics2D)g;
 		g2.setColor(animation.getColor("button"));
 		g2.fillOval( 0, 0, getWidth(), getHeight() );
+	}
+	
+	private void doPaintForeground( Graphics g ){
+		Graphics2D g2 = (Graphics2D)g;
 		
         Icon icon = model.getPaintIcon();
 		if( icon != null ){
@@ -216,8 +277,6 @@ public class RoundButton extends JComponent implements RoundButtonConnectable{
 		    g2.drawOval( 1, 1, getWidth()-3, getHeight()-3 );
 		    g2.setStroke( stroke );
 		}
-		
-		g2.dispose();
 	}
 
     private void updateColors() {

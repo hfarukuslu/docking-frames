@@ -27,16 +27,38 @@ package bibliothek.gui.dock.themes.basic.action;
 
 import java.awt.Component;
 import java.awt.Dimension;
-import java.awt.event.*;
+import java.awt.Point;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-import javax.swing.*;
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.ActionMap;
+import javax.swing.Icon;
+import javax.swing.InputMap;
+import javax.swing.JComponent;
+import javax.swing.KeyStroke;
 import javax.swing.event.MouseInputAdapter;
+import javax.swing.event.MouseInputListener;
 
+import bibliothek.gui.DockController;
+import bibliothek.gui.Dockable;
+import bibliothek.gui.dock.DockElement;
+import bibliothek.gui.dock.DockElementRepresentative;
 import bibliothek.gui.dock.action.DockAction;
+import bibliothek.gui.dock.event.DockHierarchyEvent;
+import bibliothek.gui.dock.event.DockHierarchyListener;
+import bibliothek.gui.dock.themes.border.BorderModifier;
 import bibliothek.gui.dock.title.DockTitle;
 import bibliothek.gui.dock.title.DockTitle.Orientation;
+import bibliothek.gui.dock.util.BackgroundComponent;
+import bibliothek.gui.dock.util.BackgroundPaint;
 import bibliothek.gui.dock.util.DockUtilities;
 import bibliothek.util.container.Triple;
 
@@ -68,6 +90,9 @@ public class BasicButtonModel {
     /** automatically created icon used when this model is not enabled, but selected */
     private Icon autoIconSelectedDisabled;
     
+    /** the element which is represented by the action */
+    private DockActionRepresentative representative;
+    
     /** whether the mouse is inside the button or not */
     private boolean mouseInside = false;
     /** whether the first button of the mouse is currently pressed or not */
@@ -75,36 +100,52 @@ public class BasicButtonModel {
     
     /** the graphical representation of this model */
     private JComponent owner;
+    
     /** the orientation of the view */
     private Orientation orientation = Orientation.FREE_HORIZONTAL;
     
     /** a callback used when the user clicked on the view */
     private BasicTrigger trigger;
     
+    /** to initialize resources, can be <code>null</code> */
+    private BasicResourceInitializer initializer;
+    
+    /** the algorithm that should be used to paint the background of a component */
+    private BackgroundPaint background;
+    
+    /** the source of {@link #background} */
+    private BackgroundComponent backgroundComponent;
+    
     /** listeners that were added to this model */
     private List<BasicButtonModelListener> listeners = new ArrayList<BasicButtonModelListener>();
+    
+    /** a list of borders to use by the associated button */
+    private Map<String, BorderModifier> borders = new HashMap<String, BorderModifier>();
     
     /**
      * Creates a new model.
      * @param owner the view of this model
      * @param trigger the callback used when the user clicks on the view
+     * @param initializer a strategy to lazily initialize resources, can be <code>null</code>
      */
-    public BasicButtonModel( JComponent owner, BasicTrigger trigger ){
-        this( owner, trigger, true );
+    public BasicButtonModel( JComponent owner, BasicTrigger trigger, BasicResourceInitializer initializer ){
+        this( owner, trigger, initializer, true );
     }
 
     /**
      * Creates a new model.
      * @param owner the view of this model
      * @param trigger the callback used when the user clicks on the view
+     * @param initializer a strategy to lazily initialize resources, can be <code>null</code>
      * @param createListener whether to create and add a {@link MouseListener} and
      * a {@link MouseMotionListener} to <code>owner</code>. If this argument
      * is <code>false</code>, then the client is responsible to update all
      * properties of this model.
      */
-    public BasicButtonModel( JComponent owner, BasicTrigger trigger, boolean createListener ){
+    public BasicButtonModel( JComponent owner, BasicTrigger trigger, BasicResourceInitializer initializer, boolean createListener ){
         this.owner = owner;
         this.trigger = trigger;
+        this.initializer = initializer;
         
         if( createListener ){
             Listener listener = new Listener();
@@ -121,13 +162,6 @@ public class BasicButtonModel {
                 inputMap.put( action.getA(), action.getB() );
                 actionMap.put( action.getB(), action.getC() );
             }
-            
-            owner.addFocusListener( new FocusAdapter(){
-                @Override
-                public void focusLost( FocusEvent e ) {
-                    setMousePressed( false );
-                }
-            });
         }
     }
     
@@ -199,6 +233,83 @@ public class BasicButtonModel {
      */
     public JComponent getOwner() {
         return owner;
+    }
+    
+    /**
+     * Sets the algorithm which should be used to paint the background of the owner.
+     * @param background the background algorithm, can be <code>null</code>
+     * @param backgroundComponent the source of <code>background</code>. Must not be <code>null</code> if 
+     * <code>background</code> is not <code>null</code>, must represents {@link #getOwner()} as {@link Component}.
+     */
+    public void setBackground( BackgroundPaint background, BackgroundComponent backgroundComponent ){
+		if( this.background != background ){
+			if( background != null ){
+				if( backgroundComponent == null ){
+					throw new IllegalArgumentException( "backgroundComponent must not be null" );
+				}
+				if( backgroundComponent.getComponent() != getOwner() ){
+					throw new IllegalArgumentException( "backgroundComponent must exactly represent 'getOwner()'" );
+				}
+			}
+			
+			BackgroundPaint old = this.background;
+			this.background = background;
+			this.backgroundComponent = backgroundComponent;
+			
+			for( BasicButtonModelListener listener : listeners() ){
+				listener.backgroundChanged( this, old, background );
+			}
+		}
+	}
+    
+    /**
+     * Gets the algorithm which should be used to paint the background of components.
+     * @return the background, can be <code>null</code>
+     */
+    public BackgroundPaint getBackground(){
+		return background;
+	}
+    
+    /**
+     * Gets the source of {@link #getBackground()}. 
+     * @return the source, can be <code>null</code> if {@link #getBackground()} returns <code>null</code>
+     */
+    public BackgroundComponent getBackgroundComponent(){
+		return backgroundComponent;
+	}
+    
+    /**
+     * Sets the border for some state of the component that displays this model. Which identifiers
+     * for <code>key</code> are actually used depends on that component.
+     * @param key the key of the border
+     * @param border the new border or <code>null</code>
+     */
+    public void setBorder( String key, BorderModifier border ){
+        BorderModifier oldBorder = borders.get( key );
+        if( oldBorder != border ){
+        	if( border == null ){
+        		borders.remove( key );
+        	}
+        	else{
+        		borders.put( key, border );
+        	}
+        	for( BasicButtonModelListener listener : listeners() ){
+        		listener.borderChanged( this, key, oldBorder, border );
+        	}
+        }
+    }
+    
+    /**
+     * Gets the border which is used for the state <code>key</code>. The exact value of
+     * key depends on the component which shows this model.
+     * @param key the key for some border
+     * @return the border or <code>null</code> if not found
+     */
+    public BorderModifier getBorder( String key ){
+    	if( initializer != null ){
+    		initializer.ensureBorder( this, key );
+    	}
+    	return borders.get( key );
     }
     
     /**
@@ -343,6 +454,21 @@ public class BasicButtonModel {
         }
         
         changed();
+    }
+    
+    /**
+     * Sets the {@link Dockable} for which a {@link DockElementRepresentative} has to be installed.
+     * @param dockable the dockable to monitor, can be <code>null</code>
+     */
+    public void setDockableRepresentative( Dockable dockable ){
+    	if( representative != null ){
+    		representative.unbind();
+    		representative = null;
+    	}
+    	if( dockable != null ){
+    		representative = new DockActionRepresentative( dockable );
+    		representative.bind();
+    	}
     }
     
     /**
@@ -548,5 +674,90 @@ public class BasicButtonModel {
                     setMouseInside( inside );
             }
         }
+    }
+    
+    /**
+     * A wrapper around the represented {@link Dockable}.
+     * @author Benjamin Sigg
+     */
+    private class DockActionRepresentative implements DockElementRepresentative, DockHierarchyListener{
+    	private Dockable dockable;
+    	private DockController controller;
+    	
+    	/**
+    	 * Creates a new representative
+    	 * @param dockable the represented {@link Dockable}
+    	 */
+    	public DockActionRepresentative( Dockable dockable ){
+    		this.dockable = dockable;
+    	}
+    	
+    	public void bind(){
+    		dockable.addDockHierarchyListener( this );
+    		controller = dockable.getController();
+    		if( controller != null ){
+    			controller.addRepresentative( this );
+    		}
+    	}
+    	
+    	public void unbind(){
+    		dockable.removeDockHierarchyListener( this );
+    		if( controller != null ){
+    			controller.removeRepresentative( this );
+    			controller = null;
+    		}
+    	}
+    	
+    	public void hierarchyChanged( DockHierarchyEvent event ){
+    		// ignore
+    	}
+    	
+    	public void controllerChanged( DockHierarchyEvent event ){
+    		if( controller != null ){
+    			controller.removeRepresentative( this );
+    			controller = null;
+    		}
+    		controller = dockable.getController();
+    		if( controller != null ){
+    			controller.addRepresentative( this );
+    		}
+    	}
+    	
+		public void addMouseInputListener( MouseInputListener listener ){
+			getOwner().addMouseListener( listener );
+			getOwner().addMouseMotionListener( listener );
+		}
+
+		public Component getComponent(){
+			return getOwner();
+		}
+
+		public DockElement getElement(){
+			return dockable;
+		}
+
+		public Point getPopupLocation( Point click, boolean popupTrigger ){
+			if( popupTrigger ){
+				return click;
+			}
+			return null;
+		}
+
+		public boolean isUsedAsTitle(){
+			return false;
+		}
+
+		public void removeMouseInputListener( MouseInputListener listener ){
+			getOwner().removeMouseListener( listener );
+			getOwner().removeMouseMotionListener( listener );
+		}
+
+		public boolean shouldFocus(){
+			return false;
+		}
+		
+		public boolean shouldTransfersFocus(){
+			return true;
+		}
     }
 }

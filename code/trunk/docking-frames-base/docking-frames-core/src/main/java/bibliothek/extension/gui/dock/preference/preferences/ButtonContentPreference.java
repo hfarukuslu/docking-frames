@@ -23,20 +23,24 @@
  * Benjamin Sigg
  * benjamin_sigg@gmx.ch
  * CH - Switzerland
- */package bibliothek.extension.gui.dock.preference.preferences;
+ */
+package bibliothek.extension.gui.dock.preference.preferences;
 
 import bibliothek.extension.gui.dock.preference.DefaultPreference;
+import bibliothek.extension.gui.dock.preference.model.ButtonContentPreferenceModel;
 import bibliothek.extension.gui.dock.preference.preferences.choice.ButtonContentChoice;
-import bibliothek.gui.DockUI;
 import bibliothek.gui.dock.FlapDockStation;
 import bibliothek.gui.dock.util.DockProperties;
 import bibliothek.gui.dock.util.Priority;
 import bibliothek.util.Path;
 
 /**
- * A preference for {@link FlapDockStation#BUTTON_CONTENT}.
+ * A preference for {@link FlapDockStation#BUTTON_CONTENT}. Only a few selected settings are available through
+ * this preference.
  * @author Benjamin Sigg
+ * @deprecated replaced by {@link ButtonContentPreferenceModel}
  */
+@Deprecated
 public class ButtonContentPreference extends DefaultPreference<String>{
 	private DockProperties properties;
 	private ButtonContentChoice choice;
@@ -53,13 +57,13 @@ public class ButtonContentPreference extends DefaultPreference<String>{
 		
 		choice = new ButtonContentChoice( properties );
 		setValueInfo( choice );
-		setLabel( DockUI.getDefaultDockUI().getString( "preference.layout.ButtonContentPreference.text" ) );
-		setDescription( DockUI.getDefaultDockUI().getString( "preference.layout.ButtonContentPreference.description" ) );
+		setLabelId( "preference.layout.ButtonContentPreference.text" );
+		setDescriptionId( "preference.layout.ButtonContentPreference.description" );
 		this.properties = properties;
 	}
 	
 	public void read() {
-		setValue( choice.valueToIdentifier(properties.get( FlapDockStation.BUTTON_CONTENT, Priority.CLIENT )));
+		setValue( choice.valueToIdentifier( properties.get( FlapDockStation.BUTTON_CONTENT, Priority.CLIENT )));
 	}
 	
 	public void write() {

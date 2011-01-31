@@ -28,6 +28,7 @@ package bibliothek.gui.dock.station.split;
 
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.EventQueue;
 import java.awt.Insets;
 import java.awt.Point;
 import java.awt.Rectangle;
@@ -65,8 +66,11 @@ public abstract class SplitNode{
     /** advanced placeholder information about a {@link DockStation} that was child of this node */
     private PlaceholderMap placeholderMap;
     
-    /** a (hopefully) unique of for this node */
+    /** a (hopefully) unique id for this node */
     private long id;
+    
+    /** whether {@link #ensureIdUnique()} was invoked since the last call of {@link #ensureIdUniqueAsync()} */
+    private boolean idChecked = true;
     
     /**
      * Creates a new SplitNode.
@@ -365,6 +369,94 @@ public abstract class SplitNode{
 	}
     
     /**
+     * Schedules a call to {@link #ensureIdUnique()} of the {@link Root} node. If this method is not called within the EDT,
+     * then the id is checked immediatelly. Several calls to this method may be merged into one invocation of
+     * {@link #ensureIdUnique()} for optimization. If there is no {@link Root} available, nothing happens.
+     */
+    protected void ensureIdUniqueAsync(){
+    	if( idChecked ){
+	    	idChecked = false;
+	    	if( EventQueue.isDispatchThread() ){
+	    		EventQueue.invokeLater( new Runnable(){
+					public void run(){
+						if( !idChecked ){
+							idChecked = true;
+							Root root = getRoot();
+							if( root != null ){
+								root.ensureIdUnique();
+							}
+						}
+					}
+				});
+	    	}
+	    	else{
+	    		idChecked = true;
+	    		Root root = getRoot();
+				if( root != null ){
+					root.ensureIdUnique();
+				}
+	    	}
+    	}
+    }
+    
+    /**
+     * Recursively visits all children of this {@link SplitNode} and ensures that no
+     * node has the same unique id. May change the id of some nodes if necessary.<br>
+     * After this method has completed, no two nodes in the subtree share the same id.
+     */
+    protected void ensureIdUnique(){
+    	long[] ids = new long[ getTotalChildrenCount() + 1 ];
+    	ensureIdUnique( ids, 0 );
+    }
+    
+    private int ensureIdUnique( long[] ids, int offset ){
+    	idChecked = true;
+    	
+    	int delta = 0;
+    	ids[offset] = getId();
+    	offset++;
+    	
+    	for( int i = 0, n = getMaxChildrenCount(); i<n; i++ ){
+    		SplitNode child = getChild( i );
+    		if( child != null ){
+    			delta += child.ensureIdUnique( ids, offset + delta );
+    		}
+    	}
+    	
+    	boolean issue = true;
+    	while( issue ){
+    		issue = false;
+    		long id = getId();
+    		for( int i = 0; i < delta; i++ ){
+    			if( ids[offset+i] == id ){
+    				this.id = access.uniqueID();
+    				issue = true;
+    				break;
+    			}
+    		}
+    	}
+    	
+    	return delta + 1;
+    }
+    
+    /**
+     * Counts the total number of children of this node, the total number of children is the total
+     * number of nodes and leafes in the tree below this node, excluding this node.
+     * @return the total number of children, can be 0
+     */
+    public int getTotalChildrenCount(){
+    	int max = getMaxChildrenCount();
+    	int sum = 0;
+    	for( int i = 0; i < max; i++ ){
+    		SplitNode node = getChild( i );
+    		if( node != null ){
+    			sum += 1 + node.getTotalChildrenCount();
+    		}
+    	}
+    	return sum;
+    }
+    
+    /**
      * Gets access to the owner-station
      * @return the access
      */
@@ -492,6 +584,19 @@ public abstract class SplitNode{
      */
     public abstract void setChild( SplitNode child, int location );
     
+    /** 
+     * Gets the maximal number of children this node can have.
+     * @return the maximal number of children
+     */
+    public abstract int getMaxChildrenCount();
+    
+    /**
+     * Gets the child at <code>location</code>.
+     * @param location the location of the child
+     * @return the child or <code>null</code> if the location is invalid or if there is no child at the location
+     */
+    public abstract SplitNode getChild( int location );
+    
     /**
      * Invokes one of the methods of the <code>visitor</code> for every
      * child in the subtree with this as root.
@@ -508,7 +613,7 @@ public abstract class SplitNode{
      * @param checkValidity whether to ensure that all new {@link Dockable}s are
      * acceptable or not.
      */
-    public abstract void evolve( SplitDockTree.Key key, boolean checkValidity, Map<Leaf, Dockable> linksToSet );
+    public abstract void evolve( SplitDockTree<Dockable>.Key key, boolean checkValidity, Map<Leaf, Dockable> linksToSet );
     
     /**
      * If there are elements left in <code>property</code>, then the next node
@@ -649,8 +754,8 @@ public abstract class SplitNode{
      * @param linksToSet a map that will be filled up with new {@link Leaf}s whose {@link Dockable}s have not yet been set
      * @return the new node
      */
-    protected SplitNode create( SplitDockTree.Key key, boolean checkValidity, Map<Leaf, Dockable> linksToSet ){
-    	SplitDockTree tree = key.getTree();
+    protected SplitNode create( SplitDockTree<Dockable>.Key key, boolean checkValidity, Map<Leaf, Dockable> linksToSet ){
+    	SplitDockTree<Dockable> tree = key.getTree();
     	
     	if( tree.isDockable( key )){
     		Dockable[] dockables = tree.getDockables( key );

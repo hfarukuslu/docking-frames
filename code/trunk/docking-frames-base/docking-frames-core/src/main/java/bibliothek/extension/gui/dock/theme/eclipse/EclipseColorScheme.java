@@ -31,11 +31,18 @@ import bibliothek.gui.DockUI;
 import bibliothek.gui.dock.themes.ColorScheme;
 import bibliothek.gui.dock.themes.basic.BasicColorScheme;
 import bibliothek.gui.dock.util.laf.LookAndFeelColors;
+import bibliothek.util.Colors;
+import bibliothek.util.Todo;
+import bibliothek.util.Todo.Compatibility;
+import bibliothek.util.Todo.Priority;
+import bibliothek.util.Todo.Version;
 
 /**
  * A {@link ColorScheme} used by the {@link EclipseTheme}.
  * @author Benjamin Sigg
  */
+@Todo( compatibility=Compatibility.COMPATIBLE, priority=Priority.BUG, target=Version.VERSION_1_1_0, 
+		description="LookAndFeel change seems not to change all colors, the top of a single-tab component does not change its color")
 public class EclipseColorScheme extends BasicColorScheme {
     /**
      * Creates the new color scheme
@@ -45,7 +52,7 @@ public class EclipseColorScheme extends BasicColorScheme {
     }
     
     @Override
-    public boolean updateUI(){
+    protected void updateUI(){
         super.updateUI();
         
         setColor( "stack.tab.border",                   DockUI.getColor( LookAndFeelColors.PANEL_BACKGROUND ) );
@@ -69,8 +76,12 @@ public class EclipseColorScheme extends BasicColorScheme {
         setColor( "stack.tab.text.selected.focuslost",  RexSystemColor.getInactiveTextColor() );
         
         setColor( "stack.border",                       RexSystemColor.getBorderColor() );
+        setColor( "stack.border.edges", 				DockUI.getColor( LookAndFeelColors.PANEL_BACKGROUND ) );
+        
+        setColor( "flap.button.border.inner", 			Colors.brighter( RexSystemColor.getBorderColor(), 0.7 ) );
+        setColor( "flap.button.border.outer", 			RexSystemColor.getBorderColor() );
+        setColor( "flap.button.border.edge", 			DockUI.getColor( LookAndFeelColors.PANEL_BACKGROUND ) );
         
         setColor( "selection.border",                   RexSystemColor.getBorderColor() );         
-        return true;
     }
 }

@@ -33,6 +33,8 @@ import javax.swing.event.TreeModelListener;
 import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreePath;
 
+import bibliothek.gui.DockController;
+import bibliothek.gui.dock.util.TextManager;
 import bibliothek.util.Path;
 import bibliothek.util.PathCombiner;
 
@@ -66,23 +68,37 @@ public class PreferenceTreeModel extends AbstractPreferenceModel implements Tree
     
     /**
      * Creates a new empty model.
+     * @param controller the controller in whose realm this model is used
      */
-    public PreferenceTreeModel(){
-        delegate = new MergedPreferenceModel();
+    public PreferenceTreeModel( DockController controller ){
+    	super( controller );
+        delegate = new MergedPreferenceModel( controller );
     }
     
     /**
      * Creates a new empty model.
      * @param combiner tells how to combine the {@link Path} of a model with
      * the preferences of a model. Used in {@link #getPath(int)}. Not <code>null</code>.
+     * @param controller the controller in whose realm this model is used
      * @see MergedPreferenceModel#MergedPreferenceModel(PathCombiner)
      */
-    public PreferenceTreeModel( PathCombiner combiner ){
-        delegate = new MergedPreferenceModel( combiner );
+    public PreferenceTreeModel( PathCombiner combiner, DockController controller ){
+    	super( controller );
+        delegate = new MergedPreferenceModel( combiner, controller );
+    }
+
+    @Override
+    protected boolean hasListeners(){
+    	return super.hasListeners() || treeListeners.size() > 0;
     }
     
     public void addTreeModelListener( TreeModelListener l ) {
+    	boolean listeners = hasListeners();
         treeListeners.add( l );
+        if( !listeners && hasListeners() ){
+            delegate.addPreferenceModelListener( delegateListener );
+            root.updateListening( true );
+        }
     }
     
     @Override
@@ -91,12 +107,18 @@ public class PreferenceTreeModel extends AbstractPreferenceModel implements Tree
         super.addPreferenceModelListener( listener );
         if( !listeners && hasListeners() ){
             delegate.addPreferenceModelListener( delegateListener );
+            root.updateListening( true );
         }
     }
     
 
     public void removeTreeModelListener( TreeModelListener l ) {
+    	boolean listeners = hasListeners();
         treeListeners.remove( l );
+        if( listeners && !hasListeners() ){
+            delegate.removePreferenceModelListener( delegateListener );
+            root.updateListening( false );
+        }
     }
 
     @Override
@@ -105,6 +127,7 @@ public class PreferenceTreeModel extends AbstractPreferenceModel implements Tree
         super.removePreferenceModelListener( listener );
         if( listeners && !hasListeners() ){
             delegate.removePreferenceModelListener( delegateListener );
+            root.updateListening( false );
         }
     }
     
@@ -144,8 +167,8 @@ public class PreferenceTreeModel extends AbstractPreferenceModel implements Tree
             }
             else{
                 event = new TreeModelEvent(
-                        this,
-                        node.getTreePath(),
+                        parent,
+                        parent.getTreePath(),
                         new int[]{ parent.indexOf( node ) },
                         new Object[]{ node });
             }
@@ -276,6 +299,17 @@ public class PreferenceTreeModel extends AbstractPreferenceModel implements Tree
     }
     
     /**
+     * Sets the name of the node at <code>path</code>. If there is no
+     * such node, then the node and all its parents are created. Otherwise
+     * just the name gets exchanged.
+     * @param path the path to the node
+     * @param nameId the new name, an identifier used for the {@link TextManager}
+     */
+    public void putLinked( Path path, String nameId ){
+    	root.getNode( path, 0 ).setNameId( nameId );
+    }
+    
+    /**
      * Sets the model of the node at <code>path</code>. If there is
      * no such node, then the node and all its parents are created. Otherwise
      * just the model gets exchanged.
@@ -293,6 +327,7 @@ public class PreferenceTreeModel extends AbstractPreferenceModel implements Tree
      * @param path the path to the node
      * @param name the new name
      * @param model the new model, can be <code>null</code>
+     * @see #putLinked(Path, String, PreferenceModel)
      * @see #putNode(Path, String)
      * @see #putModel(Path, PreferenceModel)
      */
@@ -302,6 +337,29 @@ public class PreferenceTreeModel extends AbstractPreferenceModel implements Tree
         	delegate.add( model, path );
         }
         root.getNode( path, 0 ).set( name, model );
+    }
+    
+    /**
+     * Sets name and model of a given node.
+     * @param path the path to the node
+     * @param nameId the new name, an identifier used for a {@link TextManager}.
+     * @param model the new model, can be <code>null</code>
+     */
+    public void putLinked( Path path, String nameId, PreferenceModel model ){
+    	delegate.remove( path );
+    	if( model != null ){
+    		delegate.add( model, path );
+    	}
+    	root.getNode( path, 0 ).setLinked( nameId, model );
+    }
+    
+    /**
+     * Gets the model which was stored using <code>path</code> as key.
+     * @param path the key of some model
+     * @return the model or <code>null</code>
+     */
+    public PreferenceModel getModel( Path path ){
+    	return delegate.getModel( path );
     }
     
     /**
@@ -345,12 +403,37 @@ public class PreferenceTreeModel extends AbstractPreferenceModel implements Tree
         private Path path;
         private TreePath treePath;
         
-        private String name;
+        private PreferenceModelText name;
         private PreferenceModel model;
         
         public TreeNode( TreeNode parent, Path path ){
             this.parent = parent;
             this.path = path;
+            
+            name = new PreferenceModelText( "null", PreferenceTreeModel.this ){
+				protected void changed( String oldValue, String newValue ){
+					fireNodeChanged( TreeNode.this );
+				}
+			};
+			
+			if( hasListeners() ){
+				name.setController( getController() );
+			}
+        }
+        
+        public void updateListening( boolean listening ){
+        	if( listening ){
+        		name.setController( getController() );
+        	}
+        	else{
+        		name.setController( null );
+        	}
+        	
+        	if( children != null ){
+	        	for( TreeNode child : children ){
+	        		child.updateListening( listening );
+	        	}
+        	}
         }
         
         public int getChildrenCount(){
@@ -458,26 +541,38 @@ public class PreferenceTreeModel extends AbstractPreferenceModel implements Tree
         
         @Override
         public String toString() {
-            return name == null ? "" : name;
+        	return name.value();
         }
         
         public Path getPath() {
             return path;
         }
         
+        public void setLinked( String name, PreferenceModel model ){
+        	this.model = model;
+        	setNameId( name );
+        	fireNodeChanged( this );
+        }
+        
         public void set( String name, PreferenceModel model ){
-            this.name = name;
             this.model = model;
+            setName( name );
             fireNodeChanged( this );
+        }
+        
+        public void setNameId( String nameId ){
+        	this.name.setId( nameId );
         }
         
         public void setName( String name ) {
-            this.name = name;
-            fireNodeChanged( this );
+            this.name.setValue( name );
         }
         
         public String getName() {
-            return name;
+        	if( !hasListeners() ){
+        		name.update( getController().getTexts() );
+        	}
+            return name.value();
         }
         
         public void setModel( PreferenceModel model ) {

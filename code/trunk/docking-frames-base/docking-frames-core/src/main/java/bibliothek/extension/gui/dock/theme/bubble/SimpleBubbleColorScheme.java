@@ -33,15 +33,22 @@ import static bibliothek.util.Colors.middle;
 import static bibliothek.util.Colors.undiffMirror;
 
 import java.awt.Color;
+import java.util.Collection;
+import java.util.Set;
 
 import javax.swing.LookAndFeel;
 
 import bibliothek.gui.DockUI;
-import bibliothek.gui.dock.themes.ColorBridgeFactory;
 import bibliothek.gui.dock.themes.ColorScheme;
+import bibliothek.gui.dock.themes.color.AbstractColorScheme;
 import bibliothek.gui.dock.themes.color.DefaultColorScheme;
-import bibliothek.gui.dock.util.Priority;
+import bibliothek.gui.dock.util.UIProperties;
+import bibliothek.gui.dock.util.UIScheme;
+import bibliothek.gui.dock.util.UISchemeEvent;
+import bibliothek.gui.dock.util.UISchemeListener;
+import bibliothek.gui.dock.util.color.ColorBridge;
 import bibliothek.gui.dock.util.color.ColorManager;
+import bibliothek.gui.dock.util.color.DockColor;
 import bibliothek.gui.dock.util.laf.LookAndFeelColors;
 import bibliothek.util.Path;
 
@@ -62,32 +69,82 @@ public class SimpleBubbleColorScheme extends DefaultColorScheme {
     
     /** A scheme that uses colors from the {@link LookAndFeel} */
     public static final ColorScheme LOOK_AND_FEEL =
-        new ColorScheme(){
+        new AbstractColorScheme(){
             private ColorScheme delegate;
-        
+            
+            private UISchemeListener<Color, DockColor, ColorBridge> delegateListener = new UISchemeListener<Color, DockColor, ColorBridge>(){
+				public void changed( final UISchemeEvent<Color, DockColor, ColorBridge> event ){
+					fire( new UISchemeEvent<Color, DockColor, ColorBridge>(){
+						public UIScheme<Color, DockColor, ColorBridge> getScheme(){
+							return self();
+						}
+						public Collection<Path> changedBridges( Set<Path> names ){
+							return event.changedBridges( names );
+						}
+						public Collection<String> changedResources( Set<String> names ){
+							return event.changedResources( names );
+						}
+					});
+				}
+            };
+            
             {
                 updateUI();
             }
-            
-            public Color getColor( String id ) {
-                return delegate.getColor( id ); 
+        
+            private ColorScheme self(){
+            	return this;
             }
             
-            public ColorBridgeFactory getBridgeFactory( Path kind ) {
-                return delegate.getBridgeFactory( kind );
+            @Override
+            public void addListener( UISchemeListener<Color,DockColor,ColorBridge> listener ){
+            	boolean has = hasListeners();
+            	super.addListener( listener );
+            	if( !has ){
+            		delegate.addListener( delegateListener );
+            	}
             }
             
-            public void transmitAll( Priority priority, ColorManager manager ) {
-                delegate.transmitAll( priority, manager );
+            @Override
+            public void removeListener( UISchemeListener<Color,DockColor,ColorBridge> listener ){
+            	super.removeListener( listener );
+            	if( !hasListeners() ){
+            		delegate.removeListener( delegateListener );
+            	}
             }
-
-            public boolean updateUI() {
+            
+            @Override
+            public void install( UIProperties<Color,DockColor,ColorBridge> properties ){
+            	delegate.install( properties );
+            }
+            
+            @Override
+            public void uninstall( UIProperties<Color,DockColor,ColorBridge> properties ){
+            	delegate.uninstall( properties );
+            }
+            
+            public ColorBridge getBridge( Path name, UIProperties<Color, DockColor, ColorBridge> properties ){
+	            return delegate.getBridge( name, properties );
+            }
+            
+            public Color getResource( String name, UIProperties<Color, DockColor, ColorBridge> properties ){
+            	return delegate.getResource( name, properties );
+            }
+            
+            protected void updateUI() {
+            	if( delegate != null ){
+            		for( ColorManager manager : managers() ){
+            			delegate.uninstall( manager );
+            		}
+            		if( hasListeners() ){
+            			delegate.removeListener( delegateListener );
+            		}
+            	}
+            	
                 delegate = new SimpleBubbleColorScheme( 
                         DockUI.getColor( LookAndFeelColors.TITLE_SELECTION_BACKGROUND ),
                         DockUI.getColor( LookAndFeelColors.TITLE_BACKGROUND ),
-                        
-                        
-                        
+
                         diffMirror( DockUI.getColor( LookAndFeelColors.TITLE_BACKGROUND ), 0.25 ),
                         diffMirror( DockUI.getColor( LookAndFeelColors.TITLE_SELECTION_BACKGROUND ), 0.4 ),
                         undiffMirror( DockUI.getColor( LookAndFeelColors.TITLE_BACKGROUND ), 0.75 ),
@@ -96,7 +153,24 @@ public class SimpleBubbleColorScheme extends DefaultColorScheme {
                         DockUI.getColor( LookAndFeelColors.TITLE_FOREGROUND ),
                         0.3, 0.6, 0.9 );
                 
-                return true;
+                for( ColorManager manager : managers() ){
+                	delegate.install( manager );
+                }
+                if( hasListeners() ){
+                	delegate.addListener( delegateListener );
+                }
+                
+                fire( new UISchemeEvent<Color, DockColor, ColorBridge>(){
+                	public UIScheme<Color, DockColor, ColorBridge> getScheme(){
+                		return self();
+                	}
+                	public Collection<Path> changedBridges( Set<Path> names ){
+                		return null;
+                	}
+                	public Collection<String> changedResources( Set<String> names ){
+                		return null;
+                	}
+				});
             }
     };
         
@@ -158,18 +232,18 @@ public class SimpleBubbleColorScheme extends DefaultColorScheme {
         setColor( "stack.tab.border.selected.mouse",              diffMirror( inactive, factor ));
         setColor( "stack.tab.foreground.selected.mouse",          diffMirror( inactive, 1.0 ));
         
-        setColor( "stack.tab.background.top.selected",            brighter( inactive, factorWeak ));
-        setColor( "stack.tab.background.bottom.selected",         darker( inactive, factorWeak ) );
+        setColor( "stack.tab.background.top.selected",            brighter( inactive, factor ));
+        setColor( "stack.tab.background.bottom.selected",         darker( inactive, factor ) );
         setColor( "stack.tab.border.selected",                    diffMirror( inactive, factorWeak ));
         setColor( "stack.tab.foreground.selected",                diffMirror( inactive, 1.0 ));
         
-        setColor( "stack.tab.background.top.focused.mouse",       fuller( brighter( active, factor ), factor ));
-        setColor( "stack.tab.background.bottom.focused.mouse",    fuller( darker( active, factor ), factor ) );
+        setColor( "stack.tab.background.top.focused.mouse",       brighter( active, factor ));
+        setColor( "stack.tab.background.bottom.focused.mouse",    darker( active, factor ));
         setColor( "stack.tab.border.focused.mouse",               diffMirror( active, factor ));
         setColor( "stack.tab.foreground.focused.mouse",           diffMirror( active, 1.0 ));
         
-        setColor( "stack.tab.background.top.focused",             fuller( brighter( active, factorWeak ), factor ));
-        setColor( "stack.tab.background.bottom.focused",          fuller( darker( active, factorWeak ), factor ) );
+        setColor( "stack.tab.background.top.focused",             brighter( active, factorWeak ));
+        setColor( "stack.tab.background.bottom.focused",          darker( active, factorWeak ));
         setColor( "stack.tab.border.focused",                     diffMirror( active, factorWeak ));
         setColor( "stack.tab.foreground.focused",                 diffMirror( active, 1.0 ));
         

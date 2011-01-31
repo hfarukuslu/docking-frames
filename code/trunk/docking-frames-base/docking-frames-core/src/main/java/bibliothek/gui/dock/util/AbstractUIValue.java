@@ -58,6 +58,8 @@ public abstract class AbstractUIValue<V, U extends UIValue<V>> implements UIValu
     /** the current owner of this {@link UIValue} */
     private UIProperties<V, U, ?> manager;
     
+    /** an override value of <code>null</code> is returned by {@link #value()} */
+    private boolean overrideNull = false;
 
     /**
      * Creates a new {@link UIValue}.
@@ -192,12 +194,21 @@ public abstract class AbstractUIValue<V, U extends UIValue<V>> implements UIValu
     }
     
     /**
+     * Updates the value of this {@link UIValue} without actually installing <code>this</code>
+     * on <code>manager</code>.
+     * @param manager the manager from which to read the value
+     */
+    public void update( UIProperties<V, U, ?> manager ){
+    	manager.get( id, kind, me() );
+    }
+    
+    /**
      * Gets the first non-<code>null</code> value of the list
      * <code>override</code>, <code>value</code>, <code>backup</code>.
      * @return a resource or <code>null</code>
      */
     public V value(){
-        if( override != null )
+        if( overrideNull || override != null )
             return override;
         
         if( value != null )
@@ -218,12 +229,24 @@ public abstract class AbstractUIValue<V, U extends UIValue<V>> implements UIValu
      * @param value the new override or <code>null</code>
      */
     public void setValue( V value ) {
-        V oldColor = value();
+    	setValue( value, false );
+    }
+    
+    /**
+     * Sets the override value. Please note that some modules won't work properly if {@link #value()} returns
+     * <code>null</code>, use <code>forceNull</code> with care.
+     * @param value the new value, can be <code>null</code>
+     * @param forceNull if <code>true</code> and <code>value</code> is <code>null</code>, then
+     * the result of {@link #value()} is <code>null</code> too
+     */
+    public void setValue( V value, boolean forceNull ){
+        V oldValue = value();
         this.override = value;
-        V newColor = value();
+        this.overrideNull = forceNull;
+        V newValue = value();
         
-        if( oldColor != newColor ){
-            changed( oldColor, newColor );
+        if( oldValue != newValue ){
+            changed( oldValue, newValue );
         }
     }
     

@@ -48,9 +48,12 @@ public final class Colors {
 	public static Color darker ( Color c, double value ){
 		if ( c == null )
 			return null;
+		
+		if( value < 0 ){
+			return brighter( c, -value );
+		}
 
 		if ( value > 1 ) value = 1;
-		if ( value < 0 ) value = 0;
 
 		value = 1 - value;
 
@@ -72,10 +75,13 @@ public final class Colors {
 		if ( c == null )
 			return null;
 
+		if( value < 0 ){
+			return darker( c, -value );
+		}
+		
 		int dr, dg, db;
 
 		if ( value > 1 ) value = 1;
-		if ( value < 0 ) value = 0;
 
 		dr = 255 - c.getRed();
 		dg = 255 - c.getGreen();
@@ -88,6 +94,20 @@ public final class Colors {
 		);
 		return back;
 	}
+	
+	/**
+	 * Converts <code>c</code> into HSB and adds <code>delta</code> to the brightness.
+	 * @param c the color to convert
+	 * @param delta the delta in brightness
+	 * @return the new color
+	 */
+	public static Color deltaBrightness( Color c, double delta ){
+		float[] hsb = Color.RGBtoHSB( c.getRed(), c.getBlue(), c.getGreen(), null );
+		hsb[2] += delta;
+		hsb[2] = Math.max( 0, Math.min( 1, hsb[2] ));
+		return Color.getHSBColor( hsb[0], hsb[1], hsb[2] );
+	}
+	
 	/**
 	 * Creates a color which "lies between" the colors <code>a</code>
 	 * and <code>b</code>

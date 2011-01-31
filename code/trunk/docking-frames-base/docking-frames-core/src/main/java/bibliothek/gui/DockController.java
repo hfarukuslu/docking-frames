@@ -28,31 +28,23 @@ package bibliothek.gui;
 
 import java.awt.Component;
 import java.awt.Dialog;
-import java.awt.EventQueue;
 import java.awt.Frame;
-import java.awt.KeyboardFocusManager;
 import java.awt.Window;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.ResourceBundle;
 import java.util.Set;
-import java.util.Stack;
 
-import javax.swing.FocusManager;
 import javax.swing.KeyStroke;
 import javax.swing.LookAndFeel;
 import javax.swing.SwingUtilities;
-import javax.swing.Timer;
-import javax.swing.UIManager;
 
 import bibliothek.gui.dock.DockElement;
 import bibliothek.gui.dock.DockElementRepresentative;
@@ -75,8 +67,9 @@ import bibliothek.gui.dock.control.DockRelocatorMode;
 import bibliothek.gui.dock.control.DockableSelector;
 import bibliothek.gui.dock.control.DoubleClickController;
 import bibliothek.gui.dock.control.KeyboardController;
-import bibliothek.gui.dock.control.MouseFocusObserver;
 import bibliothek.gui.dock.control.SingleParentRemover;
+import bibliothek.gui.dock.control.focus.FocusController;
+import bibliothek.gui.dock.control.focus.MouseFocusObserver;
 import bibliothek.gui.dock.event.ControllerSetupListener;
 import bibliothek.gui.dock.event.DockControllerRepresentativeListener;
 import bibliothek.gui.dock.event.DockRegisterAdapter;
@@ -92,27 +85,37 @@ import bibliothek.gui.dock.event.DockableListener;
 import bibliothek.gui.dock.event.DockableSelectionEvent;
 import bibliothek.gui.dock.event.DockableSelectionListener;
 import bibliothek.gui.dock.event.UIListener;
-import bibliothek.gui.dock.themes.DockThemeExtension;
+import bibliothek.gui.dock.themes.ThemeManager;
 import bibliothek.gui.dock.title.DockTitle;
 import bibliothek.gui.dock.title.DockTitleManager;
 import bibliothek.gui.dock.util.DirectWindowProvider;
 import bibliothek.gui.dock.util.DockProperties;
 import bibliothek.gui.dock.util.DockUtilities;
 import bibliothek.gui.dock.util.IconManager;
+import bibliothek.gui.dock.util.Priority;
+import bibliothek.gui.dock.util.PropertyKey;
+import bibliothek.gui.dock.util.TextManager;
+import bibliothek.gui.dock.util.UIScheme;
 import bibliothek.gui.dock.util.WindowProvider;
 import bibliothek.gui.dock.util.WindowProviderListener;
 import bibliothek.gui.dock.util.WindowProviderWrapper;
 import bibliothek.gui.dock.util.color.ColorManager;
 import bibliothek.gui.dock.util.extension.ExtensionManager;
-import bibliothek.gui.dock.util.extension.ExtensionName;
 import bibliothek.gui.dock.util.font.FontManager;
+import bibliothek.gui.dock.util.property.ConstantPropertyFactory;
+import bibliothek.gui.dock.util.text.DefaultTextScheme;
+import bibliothek.gui.dock.util.text.TextBridge;
+import bibliothek.gui.dock.util.text.TextValue;
+import bibliothek.util.Todo;
+import bibliothek.util.Todo.Compatibility;
+import bibliothek.util.Todo.Version;
 
 /**
  * A controller connects all the {@link DockStation}s, {@link Dockable}s and
  * other objects that play together in this framework. This class also serves
  * as low-level access point for clients. When using this framework in general, 
  * or {@link DockController} in particular, several rules have
- * to be obeied:
+ * to be obeyed:
  * <ul>
  * 	<li>{@link DockStation}s and {@link Dockable}s build trees. The roots
  *  of these trees need to be registered using {@link #add(DockStation)}.</li>
@@ -133,6 +136,9 @@ import bibliothek.gui.dock.util.font.FontManager;
  * @author Benjamin Sigg
  */
 public class DockController {
+	/** property telling whether this application runs in a restricted environment or not, the default value is the result of {@link DockUI#isSecureEnvironment()} */
+	public static final PropertyKey<Boolean> RESTRICTED_ENVIRONMENT = new PropertyKey<Boolean>( "dock.restricted_environment", new ConstantPropertyFactory<Boolean>( DockUI.isSecureEnvironment() ), true );
+	
 	/** the known dockables and DockStations */
 	private DockRegister register;
 	/** the known {@link Component}s in the realm of this controller */
@@ -149,33 +155,29 @@ public class DockController {
 	
 	/** selector allows to select {@link Dockable} using the mouse or the keyboard */
 	private DockableSelector dockableSelector;
-	
-    /** the Dockable which has currently the focus, can be <code>null</code> */
-    private Dockable focusedDockable = null;
     
-    /** Listeners observing the focused {@link Dockable} */
-    private List<DockableFocusListener> dockableFocusListeners = new ArrayList<DockableFocusListener>();
     /** Listeners observing the selected {@link Dockable}s */
     private List<DockableSelectionListener> dockableSelectionListeners = new ArrayList<DockableSelectionListener>();
     /** Listeners observing the bound-state of {@link DockTitle}s */
     private List<DockTitleBindingListener> dockTitleBindingListeners = new ArrayList<DockTitleBindingListener>();
-    /** Listeners observing the ui */
-    private List<UIListener> uiListeners = new ArrayList<UIListener>();
     
-    /** <code>true</code> while the controller actively changes the focus */
-    private boolean onFocusing = false;
     /** a special controller listening to AWT-events and changing the focused dockable */
     private MouseFocusObserver focusObserver;
+    
+    /** class managing focus transfer between {@link Dockable}s */
+    private FocusController focusController;
     
     /** an observer of the bound {@link DockTitle}s */
     private DockTitleObserver dockTitleObserver = new DockTitleObserver();
     /** mapping tells which titles are currently active */
     private Map<DockTitle, Dockable> activeTitles = new HashMap<DockTitle, Dockable>();
     /** a source for {@link DockTitle} */
-    private DockTitleManager dockTitles = new DockTitleManager( this );
+    private DockTitleManager dockTitles;
     
     /** the set of icons used with this controller */
-    private IconManager icons = new IconManager();
+    private IconManager icons;
+    /** the set of strings used by this controller */
+    private TextManager texts;
     /** map of colors that are used through the realm of this controller */
     private ColorManager colors;
     /** map of fonts that are used through the realm of this controller */
@@ -201,7 +203,7 @@ public class DockController {
     private SingleParentRemover remover;
     
     /** a theme describing the look of the stations */
-    private DockTheme theme;
+    private ThemeManager theme;
     /** a set of properties */
     private DockProperties properties;
     
@@ -219,15 +221,6 @@ public class DockController {
     private WindowProviderWrapper rootWindowProvider;
     /** the current root window, can be <code>null</code> */
     private Window rootWindow;
-    
-    /** a listener that is added to the {@link UIManager} and gets notified when the {@link LookAndFeel} changes */
-    private PropertyChangeListener lookAndFeelObserver = new PropertyChangeListener(){
-        public void propertyChange( PropertyChangeEvent evt ) {
-            if( "lookAndFeel".equals( evt.getPropertyName() )){
-                updateUI();
-            }
-        }
-    };
     
     /**
      * Creates a new controller. 
@@ -270,9 +263,17 @@ public class DockController {
         if( factory == null )
             throw new IllegalArgumentException( "Factory must not be null" );
         
+        
         properties = new DockProperties( this );
+        theme = new ThemeManager( this );
+        icons = new IconManager( this );
         colors = new ColorManager( this );
         fonts = new FontManager( this );
+        dockTitles = new DockTitleManager( this );
+        texts = new TextManager( this );
+        texts.setScheme( Priority.DEFAULT, createDefaultTextScheme() );
+        
+        theme.init();
         
     	rootWindowProvider = new WindowProviderWrapper();
         rootWindowProvider.addWindowProviderListener( new WindowProviderListener(){
@@ -301,7 +302,7 @@ public class DockController {
         this.factory = factory;
         
     	register = factory.createRegister( this, setup );
-    	DockRegisterListener focus = factory.createFocusController( this, setup );
+    	DockRegisterListener focus = factory.createVisibilityFocusObserver( this, setup );
     	if( focus != null )
     		register.addDockRegisterListener( focus );
     	
@@ -319,6 +320,7 @@ public class DockController {
         
         defaultActionOffer = factory.createDefaultActionOffer( this, setup );
         focusObserver = factory.createMouseFocusObserver( this, setup );
+        focusController = factory.createFocusController( this, setup );
         actionViewConverter = factory.createActionViewConverter( this, setup );
         doubleClickController = factory.createDoubleClickController( this, setup );
         keyboardController = factory.createKeyboardController( this, setup );
@@ -327,9 +329,7 @@ public class DockController {
         extensions = factory.createExtensionManager( this, setup );
         extensions.init();
         
-        DockUI.getDefaultDockUI().fillIcons( icons );
-        
-        setTheme( DockUI.getDefaultDockUI().getDefaultTheme().create() );
+        setTheme( DockUI.getDefaultDockUI().getDefaultTheme().create( this ) );
         
         relocator.addMode( DockRelocatorMode.SCREEN_ONLY );
         relocator.addMode( DockRelocatorMode.NO_COMBINATION );
@@ -347,11 +347,19 @@ public class DockController {
         
         
         setSingleParentRemover( factory.createSingleParentRemover( this, setup ) );
-        
-        UIManager.addPropertyChangeListener( lookAndFeelObserver );
+        focusController.addDockableFocusListener( new FocusControllerObserver() );
         
         for( ControllerSetupListener listener : setupListeners )
             listener.done( this );
+    }
+    
+    /**
+     * Creates the default {@link UIScheme} for the {@link TextManager}.
+     * @return the default {@link UIScheme}, should not be <code>null</code>
+     */
+    protected UIScheme<String, TextValue, TextBridge> createDefaultTextScheme(){
+    	ResourceBundle bundle = ResourceBundle.getBundle( "data.locale.text", Locale.getDefault(), this.getClass().getClassLoader() );
+    	return new DefaultTextScheme( bundle );
     }
     
     /**
@@ -363,19 +371,57 @@ public class DockController {
 	    focusObserver.kill();
 	    register.kill();
 	    keyboardController.kill();
-	    theme.uninstall( this );
-	    UIManager.removePropertyChangeListener( lookAndFeelObserver );
+	    theme.kill();
 	    extensions.kill();
 	    setRootWindowProvider( null );
     }
     
     /**
-     * Gets the current focus-controller
+     * Tells this controller whether this application runs in a restricted environment or not. Calling this
+     * method is equivalent of setting the property {@link #RESTRICTED_ENVIRONMENT}.<br>
+     * Please note that setting this property to <code>false</code> in a restricted environment will lead
+     * to {@link SecurityException}s and ultimately to unspecified behavior.
+     * @param restricted whether restricted algorithms have to be used
+     */
+    public void setRestrictedEnvironment( boolean restricted ){
+    	getProperties().set( RESTRICTED_ENVIRONMENT, restricted );
+    }
+    
+    /**
+     * Tells whether this controller uses restricted algorithms for a restricted environment.
+     * @return whether restricted algorithms have to be used
+     */
+    public boolean isRestrictedEnvironment(){
+    	return getProperties().get( RESTRICTED_ENVIRONMENT );
+    }
+    
+    /**
+     * Gets the current focus manager that tracks the mouse.
      * @return the controller
      */
-    public MouseFocusObserver getFocusObserver() {
+    public MouseFocusObserver getMouseFocusObserver() {
         return focusObserver;
     }
+    
+    /**
+     * Gets the current focus manager that tracks the mouse.
+     * @return the controller
+     * @deprecated replaced by {@link #getMouseFocusObserver()}
+     */
+    @Deprecated
+    @Todo( compatibility=Compatibility.BREAK_MINOR, priority=Todo.Priority.MINOR, target=Version.VERSION_1_1_1,
+    		description="remove this method")
+    public MouseFocusObserver getFocusObserver(){
+		return getMouseFocusObserver();
+	}
+    
+    /**
+     * Gets the manager which is responsible for transfering focus between {@link Dockable}s.
+     * @return the manager, not <code>null</code>
+     */
+    public FocusController getFocusController(){
+		return focusController;
+	}
     
     /**
      * Gets the set of {@link Dockable Dockables} and {@link DockStation DockStations}
@@ -620,47 +666,7 @@ public class DockController {
      * @param theme the new theme
      */
     public void setTheme( DockTheme theme ){
-    	if( theme == null )
-    		throw new IllegalArgumentException( "Theme must not be null" );
-    	
-    	if( this.theme != theme ){
-    		for( UIListener listener : uiListeners() )
-    			listener.themeWillChange( this, this.theme, theme );
-    		
-    		DockTheme oldTheme = this.theme;
-    		Dockable focused = null;
-    		try{
-    			register.setStalled( true );
-    			focused = getFocusedDockable();
-    			
-	    		if( this.theme != null )
-	    			this.theme.uninstall( this );
-	    		
-	    		this.theme = theme;
-	    		
-	    		ExtensionName<DockThemeExtension> name = new ExtensionName<DockThemeExtension>( 
-	    				DockThemeExtension.DOCK_THEME_EXTENSION, DockThemeExtension.class, DockThemeExtension.THEME_PARAMETER, theme );
-	    		List<DockThemeExtension> extensions = getExtensions().load( name );
-	    		
-	    		theme.install( this, extensions.toArray( new DockThemeExtension[ extensions.size() ] ) );
-	    		dockTitles.registerTheme( DockTitleManager.THEME_FACTORY_ID, theme.getTitleFactory( this ) );
-	    		
-	    		// update only those station which are registered to this controller
-	    		for( DockStation station : register.listDockStations() ){
-	    			if( station.getController() == this ){
-	    				station.updateTheme();
-	    			}
-	    		}
-    		}
-    		finally{
-    			register.setStalled( false );
-    		}
-	    		
-    		setFocusedDockable( focused, true );
-    		
-    		for( UIListener listener : uiListeners() )
-    			listener.themeChanged( this, oldTheme, theme );
-    	}
+    	this.theme.setTheme( theme );
 	}
     
     /**
@@ -668,8 +674,17 @@ public class DockController {
      * @return the theme
      */
     public DockTheme getTheme() {
-		return theme;
+		return theme.getTheme();
 	}
+    
+    /**
+     * Gets the manager that is responsible for handling the current {@link DockTheme} and 
+     * distributing its properties.
+     * @return the manager
+     */
+    public ThemeManager getThemeManager(){
+    	return theme;
+    }
     
     /**
      * A set of properties that can be used at any place.
@@ -710,18 +725,16 @@ public class DockController {
         DockControllerRepresentativeListener[] listeners = componentToDockElementsListeners
                 .toArray( new DockControllerRepresentativeListener[componentToDockElementsListeners.size()] );
         
-        DockElementRepresentative old = componentToDockElements.put(
-                representative.getComponent(), representative );
+        DockElementRepresentative old = componentToDockElements.put( representative.getComponent(), representative );
     	
     	if( old != null ){
     	    for( DockControllerRepresentativeListener listener : listeners ){
     	        listener.representativeRemoved( this, old );
     	    }
     	}
-    	if( representative != null ){
-    	    for( DockControllerRepresentativeListener listener : listeners ){
-    	        listener.representativeAdded( this, representative );
-    	    }
+    	
+    	for( DockControllerRepresentativeListener listener : listeners ){
+    		listener.representativeAdded( this, representative );
     	}
     }
     
@@ -807,21 +820,25 @@ public class DockController {
      * @return <code>true</code> if the focus is currently changing
      */
     public boolean isOnFocusing() {
-        return onFocusing;
+        return focusController.isOnFocusing();
     }
     
     /**
      * Sets the focused {@link Dockable}. Nothing happens if <code>focusedDockable</code>
      * is a station and one of its children already has the focus.
      * @param focusedDockable the element which should have the focus
+     * @param component the {@link Component} which should receive the focus, can be <code>null</code>.
+     * See {@link FocusController#setFocusedDockable(DockElementRepresentative, Component, boolean, boolean, boolean)}.
      * @see #isOnFocusing()
      */
-    public void setAtLeastFocusedDockable( Dockable focusedDockable ) {
-        if( this.focusedDockable == null ){
-            setFocusedDockable( focusedDockable, false );
+    public void setAtLeastFocusedDockable( Dockable focusedDockable, Component component ) {
+    	Dockable current = getFocusedDockable();
+    	
+        if( current == null ){
+            setFocusedDockable( focusedDockable, component, false );
         }
-        else if( !DockUtilities.isAncestor( focusedDockable, this.focusedDockable )){
-            setFocusedDockable( focusedDockable, false );
+        else if( !DockUtilities.isAncestor( focusedDockable, current )){
+            setFocusedDockable( focusedDockable, component, false );
         }
     }
     
@@ -834,80 +851,39 @@ public class DockController {
      * to <code>false</code>.
      */
     public void setFocusedDockable( Dockable focusedDockable, boolean force ) {
-        setFocusedDockable( focusedDockable, force, true );
+    	setFocusedDockable( focusedDockable, null, force );
+    }
+    
+    /**
+     * Sets the {@link Dockable} which should have the focus.
+     * @param focusedDockable the element with the focus or <code>null</code>
+     * @param component the {@link Component} which should receive the focus, can be <code>null</code>.
+     * See {@link FocusController#setFocusedDockable(DockElementRepresentative, Component, boolean, boolean, boolean)}.
+     * @param force <code>true</code> if this controller must ensure
+     * that all properties are correct, <code>false</code> if some
+     * optimations are allowed. Clients normally can set this argument
+     * to <code>false</code>.
+     */
+    public void setFocusedDockable( Dockable focusedDockable, Component component, boolean force ) {
+        setFocusedDockable( focusedDockable, component, force, true, false );
     }
 
     /**
      * Sets the {@link Dockable} which should have the focus.
      * @param focusedDockable the element with the focus or <code>null</code>
+     * @param component the {@link Component} which should receive the focus, can be <code>null</code>.
+     * See {@link FocusController#setFocusedDockable(DockElementRepresentative, Component, boolean, boolean, boolean)}.
      * @param force <code>true</code> if this controller must ensure
      * that all properties are correct, <code>false</code> if some
      * optimations are allowed. Clients normally can set this argument
      * to <code>false</code>.
-     * @param ensureFocusSet whether to ensure that the focus is set correctly
-     * or not.
+     * @param ensureFocusSet if <code>true</code>, then this method should make sure that either <code>focusedDockable</code>
+     * itself or one of its {@link DockElementRepresentative} is the focus owner 
+     * @param ensureDockableFocused  if <code>true</code>, then this method should make sure that <code>focusedDockable</code>
+     * is the focus owner. This parameter is stronger that <code>ensureFocusSet</code>
      */
-    public void setFocusedDockable( Dockable focusedDockable, boolean force, boolean ensureFocusSet ) {
-    	// ignore more than one call
-    	if( onFocusing )
-    		return;
-    	
-    	try{
-	        onFocusing = true;
-	        
-	        if( force || this.focusedDockable != focusedDockable ){
-	            Dockable oldFocused = this.focusedDockable;
-	            this.focusedDockable = focusedDockable;
-	            
-	            for( Map.Entry<DockTitle, Dockable> title : activeTitles.entrySet() ){
-	                DockStation parent = title.getValue().getDockParent();
-	                if( parent != null )
-	                    parent.changed( title.getValue(), title.getKey(), false );
-	                else
-	                    title.getKey().changed( new DockTitleEvent( title.getValue(), false ));
-	            }
-	            
-	            activeTitles.clear();
-	            Dockable dockable = focusedDockable;
-	            
-	            while( dockable != null ){
-	                DockStation station = dockable.getDockParent();
-	                if( station != null ){
-	                    DockTitle[] titles = dockable.listBoundTitles();
-	                    
-	                    for( DockTitle title : titles ){
-	                        station.changed( dockable, title, true );
-	                        activeTitles.put( title, dockable );
-	                    }
-	                    
-	                    station.setFrontDockable( dockable );
-	                    dockable = station.asDockable();
-	                }
-	                else
-	                    dockable = null;
-	            }
-	            
-	            if( ensureFocusSet ){
-	                if( EventQueue.isDispatchThread() ){
-    	                SwingUtilities.invokeLater( new Runnable(){
-    	                    public void run() {
-    	                        ensureFocusSet();     
-    	                    }
-    	                });
-	                }
-	                else{
-	                    // we are in the wrong Thread, but we can try...
-	                    ensureFocusSet();
-	                }
-	            }
-	            
-	            if( oldFocused != focusedDockable )
-	                fireDockableFocused( oldFocused, focusedDockable );
-	        }
-    	}
-    	finally{
-    		onFocusing = false;
-    	}
+    public void setFocusedDockable( Dockable focusedDockable, Component component, boolean force, boolean ensureFocusSet, boolean ensureDockableFocused ) {
+    	focusController.setFocusedDockable( focusedDockable, component, force, ensureFocusSet, ensureDockableFocused );
     }
     
     /**
@@ -918,7 +894,7 @@ public class DockController {
      * one of its children is focused
      */
     public boolean isFocused( Dockable dockable ){
-        Dockable temp = focusedDockable;
+        Dockable temp = getFocusedDockable();
         while( temp != null ){
             if( temp == dockable )
                 return true;
@@ -947,90 +923,15 @@ public class DockController {
      * has the focus.
      */
     public void ensureFocusSet(){
-        Dockable focusedDockable = this.focusedDockable;
-        if( focusedDockable != null ){
-            Stack<Dockable> front = new Stack<Dockable>();            
-            
-            Dockable temp = focusedDockable;
-            
-            while( temp != null ){
-                DockStation parent = temp.getDockParent();
-                if( parent != null )
-                    front.push( temp );
-                
-                temp = parent == null ? null : parent.asDockable();
-            }
-            
-            while( !front.isEmpty() ){
-                Dockable element = front.pop();
-                element.getDockParent().setFrontDockable( element );
-            }
-        
-            DockTitle[] titles = focusedDockable.listBoundTitles();
-            Component focused = FocusManager.getCurrentManager().getFocusOwner();
-            if( focused != null ){
-                if( SwingUtilities.isDescendingFrom( focused, focusedDockable.getComponent() ) )
-                    return;
-                
-                for( DockTitle title : titles )
-                    if( SwingUtilities.isDescendingFrom( focused, title.getComponent() ))
-                        return;
-            }
-            
-            Component component = focusedDockable.getComponent();
-            if( component.isFocusable() ){
-                component.requestFocus();
-                component.requestFocusInWindow();
-                focus( component, 10, 20 );
-            }
-            else{
-                KeyboardFocusManager.getCurrentKeyboardFocusManager().focusNextComponent( component );
-            }
-        }
+    	focusController.ensureFocusSet( false );
     }
-    
-    /**
-     * Ensures that <code>component</code> has the focus and is on the 
-     * active window. This is done by waiting <code>delay</code> milliseconds
-     * and then checking the current focus owner. If the owner is not <code>component</code>,
-     * then the focus is transfered. Checking stops after <code>component</code>
-     * is found to be the focus owner, or <code>loops</code> failures were reported.<br>
-     * Note: this awkward method to change the focus is necessary because on some
-     * systems - like Linux - Java does not handle focus very well.
-     * @param component the component which should have the focus
-     * @param delay how much time to wait between two checks of the focus
-     * @param loops how many times to check
-     */
-    private void focus( final Component component, int delay, final int loops ){
-        final Timer timer = new Timer( delay, null );
-        timer.addActionListener( new ActionListener(){
-            private int remaining = loops;
-            
-            public void actionPerformed( ActionEvent e ) {
-                remaining--;
 
-                KeyboardFocusManager manager = KeyboardFocusManager.getCurrentKeyboardFocusManager();
-                if( manager.getPermanentFocusOwner() != component ){
-                    manager.clearGlobalFocusOwner();
-                    component.requestFocus();
-                    
-                    if( remaining > 0 ){
-                        timer.restart();
-                    }
-                }
-            }
-        });
-        
-        timer.setRepeats( false );
-        timer.start();
-    }
-    
     /**
      * Gets the {@link Dockable} which is currently focused.
      * @return the focused element or <code>null</code>
      */
     public Dockable getFocusedDockable() {
-        return focusedDockable;
+        return focusController.getFocusedDockable();
     }
     
     /**
@@ -1057,6 +958,14 @@ public class DockController {
     public IconManager getIcons() {
         return icons;
     }
+    
+    /**
+     * Gets the set of strings which are used by this controller.
+     * @return the set of texts
+     */
+    public TextManager getTexts(){
+		return texts;
+	}
     
     /**
      * Gets the map of colors which are used by this controller.
@@ -1285,27 +1194,15 @@ public class DockController {
      * @param listener the new listener
      */
     public void addDockableFocusListener( DockableFocusListener listener ){
-        if( listener == null )
-            throw new NullPointerException( "listener must not be null" );
-        dockableFocusListeners.add( listener );
+    	focusController.addDockableFocusListener( listener ); 
     }
     
-    /**
+    /**d
      * Removes a listener from this controller.
      * @param listener the listener to remove
      */
     public void removeDockableFocusListener( DockableFocusListener listener ){
-        if( listener == null )
-            throw new NullPointerException( "listener must not be null" );
-        dockableFocusListeners.remove( listener );
-    }
-    
-    /**
-     * Gets an array of currently registered {@link DockableFocusListener}s.
-     * @return the modifiable array
-     */
-    protected DockableFocusListener[] dockableFocusListeners(){
-        return dockableFocusListeners.toArray( new DockableFocusListener[ dockableFocusListeners.size() ] );
+        focusController.removeDockableFocusListener( listener );
     }
     
     /**
@@ -1359,19 +1256,6 @@ public class DockController {
     }
     
     /**
-     * Informs all listeners that <code>dockable</code> has gained
-     * the focus.
-     * @param oldFocused the old owner of the focus, may be <code>null</code>
-     * @param newFocused the owner of the focus, may be <code>null</code>
-     */
-    protected void fireDockableFocused( Dockable oldFocused, Dockable newFocused ){
-        DockableFocusEvent event = new DockableFocusEvent( this, oldFocused, newFocused );
-        
-        for( DockableFocusListener listener : dockableFocusListeners() )
-            listener.dockableFocused( event );
-    }
-    
-    /**
      * Informs all listeners that <code>dockable</code> has been selected
      * by <code>station</code>.
      * @param station some {@link DockStation}
@@ -1390,25 +1274,27 @@ public class DockController {
      * notified when the graphical user interface needs an update because
      * the {@link LookAndFeel} changed.
      * @param listener the new listener
+     * @deprecated please use {@link #getThemeManager()} to handle {@link UIListener}s, this method will be 
+     * removed in a future release.
      */
+    @Deprecated
+    @Todo( compatibility=Compatibility.BREAK_MINOR, priority=Todo.Priority.ENHANCEMENT, target=Version.VERSION_1_1_1,
+    		description="remove this method")
     public void addUIListener( UIListener listener ){
-        uiListeners.add( listener );
+        theme.addUIListener( listener );
     }
     
     /**
      * Removes a listener from this controller.
      * @param listener the listener to remove
+     * @deprecated please use {@link #getThemeManager()} to handle {@link UIListener}s, this method will be 
+     * removed in a future release.
      */
+    @Deprecated
+    @Todo( compatibility=Compatibility.BREAK_MINOR, priority=Todo.Priority.ENHANCEMENT, target=Version.VERSION_1_1_1,
+    		description="remove this method")
     public void removeUIListener( UIListener listener ){
-        uiListeners.remove( listener );
-    }
-    
-    /**
-     * Gets all the available {@link UIListener}s.
-     * @return the list of listeners
-     */
-    protected UIListener[] uiListeners(){
-    	return uiListeners.toArray( new UIListener[ uiListeners.size() ]);
+        theme.removeUIListener( listener );
     }
     
     /**
@@ -1416,10 +1302,14 @@ public class DockController {
      * needs an update because the {@link LookAndFeel} changed.
      * @see #addUIListener(UIListener)
      * @see #removeUIListener(UIListener)
+     * @deprecated please use {@link #getThemeManager()} to call a similar named method, this method will be 
+     * removed in a future release.
      */
+    @Deprecated
+    @Todo( compatibility=Compatibility.BREAK_MINOR, priority=Todo.Priority.ENHANCEMENT, target=Version.VERSION_1_1_1,
+    		description="remove this method")
     public void updateUI(){
-        for( UIListener listener : uiListeners() )
-            listener.updateUI( this );
+    	theme.updateUI();
     }
     
     /**
@@ -1448,6 +1338,42 @@ public class DockController {
     }
     
     /**
+     * Added to the current {@link FocusController} to track the active titles.
+     */
+    private class FocusControllerObserver implements DockableFocusListener{
+		public void dockableFocused( DockableFocusEvent event ){
+			for( Map.Entry<DockTitle, Dockable> title : activeTitles.entrySet() ){
+                DockStation parent = title.getValue().getDockParent();
+                if( parent != null )
+                    parent.changed( title.getValue(), title.getKey(), false );
+                else
+                    title.getKey().changed( new DockTitleEvent( title.getValue(), false ));
+            }
+            
+            activeTitles.clear();
+            
+            Dockable dockable = event.getNewFocusOwner();
+            
+            while( dockable != null ){
+                DockStation station = dockable.getDockParent();
+                if( station != null ){
+                    DockTitle[] titles = dockable.listBoundTitles();
+                    
+                    for( DockTitle title : titles ){
+                        station.changed( dockable, title, true );
+                        activeTitles.put( title, dockable );
+                    }
+                    
+                    station.setFrontDockable( dockable );
+                    dockable = station.asDockable();
+                }
+                else
+                    dockable = null;
+            }
+		}    	
+    }
+    
+    /**
      * Observers the {@link DockRegister}, adds listeners to new {@link Dockable}s
      * and {@link DockTitle}s, and collects the components of these elements
      */
@@ -1466,7 +1392,7 @@ public class DockController {
                 
                 DockStation station = dockable.getDockParent();
                 boolean focused = false;
-                Dockable temp = focusedDockable;
+                Dockable temp = getFocusedDockable();
                 while( !focused && temp != null ){
                     focused = temp == dockable;
                     DockStation parent = temp.getDockParent();

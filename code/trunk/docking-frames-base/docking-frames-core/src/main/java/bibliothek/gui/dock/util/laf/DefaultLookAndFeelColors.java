@@ -54,6 +54,7 @@ public class DefaultLookAndFeelColors extends AbstractLookAndFeelColors {
         translations.put( PANEL_BACKGROUND, "Panel.background" );
         translations.put( PANEL_FOREGROUND, "Panel.foreground" );
         translations.put( CONTROL_SHADOW, "controlDkShadow" );
+        translations.put( WINDOW_BORDER, "windowBorder" );
     }
     
     public Color getColor( String key ) {
@@ -80,22 +81,27 @@ public class DefaultLookAndFeelColors extends AbstractLookAndFeelColors {
     private class Listener implements PropertyChangeListener{
         public void propertyChange( PropertyChangeEvent evt ) {
             String name = evt.getPropertyName();
-            String key = null;
-            
-            for( Map.Entry<String, String> entry : translations.entrySet() ){
-                if( entry.getValue().equals( name )){
-                    if( key == null ){
-                        key = entry.getKey();
-                    }
-                    else{
-                        fireColorsChanged();
-                        return;
-                    }
-                }
+            if( "lookAndFeel".equals( name )){
+            	fireColorsChanged();
             }
-            
-            if( key != null )
-                fireColorChanged( key );
+            else{
+	            String key = null;
+	            
+	            for( Map.Entry<String, String> entry : translations.entrySet() ){
+	                if( entry.getValue().equals( name )){
+	                    if( key == null ){
+	                        key = entry.getKey();
+	                    }
+	                    else{
+	                        fireColorsChanged();
+	                        return;
+	                    }
+	                }
+	            }
+	            
+	            if( key != null )
+	                fireColorChanged( key );
+            }
         }
     }
 }

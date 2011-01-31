@@ -1,4 +1,4 @@
-/**
+/*
  * Bibliothek - DockingFrames
  * Library built on Java/Swing, allows the user to "drag and drop"
  * panels containing any Swing-Component the developer likes to add.
@@ -59,7 +59,7 @@ public abstract class AbstractStandardDockAction implements StandardDockAction {
     public void removeDockActionListener( StandardDockActionListener listener ) {
         listeners.remove( listener );
     }
-
+    
     /**
      * Invoked by this {@link AbstractStandardDockAction} when a {@link Dockable}
      * was bound to this action the first time.
@@ -190,5 +190,17 @@ public abstract class AbstractStandardDockAction implements StandardDockAction {
     protected void fireActionEnabledChanged( Set<Dockable> dockables ){
         for( StandardDockActionListener listener : listeners.toArray( new StandardDockActionListener[ listeners.size() ] ))
             listener.actionEnabledChanged( this, dockables );
+    }
+    
+    /**
+     * Invokes the 
+     * {@link StandardDockActionListener#actionRepresentativeChanged(StandardDockAction, Set) actionRepresentativeChanged}-
+     * method of all currently registered {@link StandardDockActionListener}
+     * @param dockables The set of dockables for which the enabled-state has been
+     * changed.
+     */
+    protected void fireActionRepresentativeChanged( Set<Dockable> dockables ){
+        for( StandardDockActionListener listener : listeners.toArray( new StandardDockActionListener[ listeners.size() ] ))
+            listener.actionRepresentativeChanged( this, dockables );
     }
 }

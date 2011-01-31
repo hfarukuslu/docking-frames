@@ -27,7 +27,9 @@ package bibliothek.gui.dock.themes.basic.action;
 
 import javax.swing.Icon;
 
+import bibliothek.gui.dock.themes.border.BorderModifier;
 import bibliothek.gui.dock.title.DockTitle.Orientation;
+import bibliothek.gui.dock.util.BackgroundPaint;
 
 /**
  * A simple implementation of {@link BasicButtonModelListener} forwarding
@@ -73,6 +75,14 @@ public class BasicButtonModelAdapter implements BasicButtonModelListener{
 	}
 
 	public void tooltipChanged( BasicButtonModel model, String old, String tooltip ){
+		changed();
+	}
+	
+	public void backgroundChanged( BasicButtonModel model, BackgroundPaint oldBackground, BackgroundPaint newBackground ){
+		changed();
+	}
+	
+	public void borderChanged( BasicButtonModel model, String key, BorderModifier oldBorder, BorderModifier newBorder ){
 		changed();
 	}
 
