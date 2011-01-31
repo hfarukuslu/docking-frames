@@ -324,21 +324,33 @@
 
 				<plugins>
 
-					<!-- download java forge -->
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-scm-plugin</artifactId>
-						<configuration>
-							<connectionUrl>${repo-connection}/${repo-module}</connectionUrl>
-							<checkoutDirectory>${repodir}</checkoutDirectory>
-						</configuration>
 						<executions>
+							<!-- download java forge -->
 							<execution>
 								<id>checkout-java-forge</id>
 								<phase>generate-sources</phase>
 								<goals>
 									<goal>checkout</goal>
 								</goals>
+								<configuration>
+									<connectionUrl>${repo-connection}/${repo-module}</connectionUrl>
+									<checkoutDirectory>${repodir}</checkoutDirectory>
+								</configuration>
+							</execution>
+							<!-- upload google code -->
+							<execution>
+								<id>checkin-google-code</id>
+								<phase>package</phase>
+								<goals>
+									<goal>checkin</goal>
+								</goals>
+								<configuration>
+									<developerConnectionUrl>${project.scm.developerConnection}</developerConnectionUrl>
+									<message>build-auto-checkin</message>
+								</configuration>
 							</execution>
 						</executions>
 					</plugin>
@@ -406,39 +418,6 @@
 										</resource>
 									</resources>
 									<outputDirectory>${basedir}/src/test/java</outputDirectory>
-								</configuration>
-							</execution>
-						</executions>
-					</plugin>
-
-					<!-- upload google code -->
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-scm-plugin</artifactId>
-						<configuration>
-							<developerConnectionUrl>${project.scm.developerConnection}</developerConnectionUrl>
-						</configuration>
-						<executions>
-							<!-- TODO -->
-							<!-- <execution> -->
-							<!-- <id>add-google-code</id> -->
-							<!-- <phase>package</phase> -->
-							<!-- <goals> -->
-							<!-- <goal>add</goal> -->
-							<!-- </goals> -->
-							<!-- <configuration> -->
-							<!-- <message></message> -->
-							<!-- <includes>**</includes> -->
-							<!-- </configuration> -->
-							<!-- </execution> -->
-							<execution>
-								<id>checkin-google-code</id>
-								<phase>package</phase>
-								<goals>
-									<goal>checkin</goal>
-								</goals>
-								<configuration>
-									<message>build-auto-checkin</message>
 								</configuration>
 							</execution>
 						</executions>
